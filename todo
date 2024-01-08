@@ -1,0 +1,12 @@
+Revisit check schedule exists - Check if schedule exists before creating it or if no rooms have conflicts and so on
+
+Validation for attendance, and other validations - DONE
+Check if attendance can be late or not - DONE
+
+Should timezone for start_time_in_utc and end_time_in_utc be in UTC?
+make title unique - NOT TO BE DONE, EXPLAIN WHY
+
+/home/saj/Documents/connect2mark/backend/api/sqlite/crud/users.py:43: SAWarning: relationship 'ScheduleModel.staff_member' will copy column users.id to column schedules.staff_member_id, which conflicts with relationship(s): 'UserModel.schedules' (copies users.id to schedules.staff_member_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards. To silence this warning, add the parameter 'overlaps="schedules"' to the 'ScheduleModel.staff_member' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+db.query(models.UserModel)
+
+cascade relationships, when scheduleinstance and attendance
