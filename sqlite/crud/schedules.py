@@ -54,6 +54,13 @@ def get_today_schedules(db: Session):
     )
 
 
+def get_all_schedules_by_user_id(user_id: int, db: Session):
+    """ "Get all schedules (reoccurring) and non-reoccurring for a particular user"""
+    return db.query(models.ScheduleModel).filter(
+        models.ScheduleModel.staff_member_id == user_id
+    )
+
+
 def get_reoccurring_schedule(schedule: ScheduleReoccurringSearchClass, db: Session):
     """Get a single reoccurring schedule from the database"""
     return (

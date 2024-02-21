@@ -17,6 +17,8 @@ from sqlite.schemas import (
 from utils.auth import user_should_be_admin
 from utils.responses import common_responses
 
+from sqlalchemy.exc import IntegrityError
+
 router = APIRouter(
     prefix="/locations",
     tags=["admin - locations"],
@@ -84,4 +86,12 @@ async def delete_location(location_id: int, db: Session = Depends(get_db)):
     db_location = locations.get_location_by_id(location_id=location_id, db=db)
     if db_location is None:
         raise HTTPException(status_code=404, detail="Location not found")
-    return locations.delete_location(db_location=db_location, db=db)
+    try:
+        return locations.delete_location(db_location=db_location, db=db)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=403,
+            detail="Can not delete a location which has schedules or classes attached to its",
+        )
+    except:
+        raise HTTPException(status_code=500, detail="Unable to delete exception")

@@ -21,6 +21,7 @@ from sqlite.schemas import (
     LocationCreateOrUpdateClass,
     ScheduleReoccurringUpdateClass,
     ScheduleNonReoccurringUpdateClass,
+    ScheduleInstanceUpdateClass,
 )
 from sqlite.enums import DepartmentsEnum, DesignationsEnum, DaysEnum, AttendanceEnum
 
@@ -52,10 +53,10 @@ class UserModel(Base):
         cascade="all, delete-orphan",
     )
 
-    created_at = Column(
+    created_at_in_utc = Column(
         DateTime(timezone=False), nullable=True, default=datetime.utcnow
     )
-    updated_at = Column(
+    updated_at_in_utc = Column(
         DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
     )
 
@@ -95,10 +96,10 @@ class LocationModel(Base):
     bluetooth_address = Column(String, unique=True, nullable=False)
     coordinates = Column(String, unique=True, nullable=False)
 
-    created_at = Column(
+    created_at_in_utc = Column(
         DateTime(timezone=False), nullable=True, default=datetime.utcnow
     )
-    updated_at = Column(
+    updated_at_in_utc = Column(
         DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
     )
 
@@ -145,10 +146,10 @@ class ScheduleModel(Base):
     start_time_in_utc = Column(Time, nullable=False)
     end_time_in_utc = Column(Time, nullable=False)
 
-    created_at = Column(
+    created_at_in_utc = Column(
         DateTime(timezone=False), nullable=True, default=datetime.utcnow
     )
-    updated_at = Column(
+    updated_at_in_utc = Column(
         DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
     )
 
@@ -214,12 +215,16 @@ class ScheduleInstanceModel(Base):
     start_time_in_utc = Column(Time, nullable=False)
     end_time_in_utc = Column(Time, nullable=False)
 
-    created_at = Column(
+    created_at_in_utc = Column(
         DateTime(timezone=False), nullable=True, default=datetime.utcnow
     )
-    updated_at = Column(
+    updated_at_in_utc = Column(
         DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
     )
+
+    def update(self, schedule_instance: ScheduleInstanceUpdateClass, **kwargs):
+        self.staff_member_id = schedule_instance.staff_member_id
+        self.location_id = schedule_instance.location_id
 
 
 class AttendanceModel(Base):
@@ -243,6 +248,6 @@ class AttendanceModel(Base):
 
     attendance_status = Column(Enum(AttendanceEnum), nullable=False)
 
-    created_at = Column(
-        DateTime(timezone=False), nullable=True, default=datetime.utcnow
+    created_at_in_utc = Column(
+        DateTime(timezone=False), nullable=False, default=datetime.utcnow
     )

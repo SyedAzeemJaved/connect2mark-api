@@ -79,9 +79,9 @@ def update_user(user: UserUpdateClass, db_user: models.UserModel, db: Session):
     db_user.update(user)
     if db_user.additional_details:
         db_user.additional_details.update(user)
-    # Need to manually update updated_at
-    # Else if only UserAdditionalDetailModel model is updated, updated_at will not trigger
-    db_user.updated_at = datetime.utcnow()
+    # Need to manually update updated_at_in_utc
+    # Else if only UserAdditionalDetailModel model is updated, updated_at_in_utc will not trigger
+    db_user.updated_at_in_utc = datetime.utcnow()
     db.commit()
 
     return db_user

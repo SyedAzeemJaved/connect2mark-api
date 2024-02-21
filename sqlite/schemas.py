@@ -95,8 +95,10 @@ class User(UserBaseClass):
     id: int
     is_admin: bool
     additional_details: UserAdditionalDetail | None
-    created_at: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
-    updated_at: datetime | None = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    updated_at_in_utc: datetime | None = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
 
 
 # Location
@@ -105,7 +107,10 @@ class LocationBaseClass(BaseModel):
     bluetooth_address: str
     coordinates: str
 
-    @field_validator("bluetooth_address")
+    # TODO
+    # Add a validator for coordinates, as a tuple taking lat and long in degrees
+
+    @field_validator("bluetooth_address", mode="before")
     @classmethod
     def bluetooth_address_validator(cls, v: str) -> str:
         pattern = r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
@@ -119,11 +124,16 @@ class LocationCreateOrUpdateClass(LocationBaseClass):
 
 
 class Location(LocationBaseClass):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={datetime: convert_datetime_to_iso_8601_with_z_suffix},
+    )
 
     id: int
-    created_at: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
-    updated_at: datetime | None = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    updated_at_in_utc: datetime | None = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
 
 
 # Schedule
@@ -159,7 +169,10 @@ class ScheduleNonReoccurringUpdateClass(ScheduleUpdateBaseClass):
 
 
 class Schedule(ScheduleBaseClass):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={datetime: convert_datetime_to_iso_8601_with_z_suffix},
+    )
 
     id: int
     is_reoccurring: bool
@@ -169,8 +182,10 @@ class Schedule(ScheduleBaseClass):
 
     date: date | None
     day: DaysEnum
-    created_at: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
-    updated_at: datetime | None = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    updated_at_in_utc: datetime | None = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
 
 
 # Schedule Search
@@ -191,22 +206,35 @@ class ScheduleNonReoccurringSearchClass(ScheduleSearchClass):
 
 # Schedule Instance / Class
 class ScheduleInstanceBaseClass(BaseModel):
+    pass
+
+
+class ScheduleInstanceUpdateClass(ScheduleInstanceBaseClass):
+    staff_member_id: int
+    location_id: int
+
+
+class ScheduleInstance(ScheduleInstanceBaseClass):
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={datetime: convert_datetime_to_iso_8601_with_z_suffix},
+    )
+
+    id: int
+
     date: date
     start_time_in_utc: time = get_current_time_in_str_iso_8601()
     end_time_in_utc: time = get_current_time_in_str_iso_8601(is_end_time=True)
 
-
-class ScheduleInstance(ScheduleInstanceBaseClass):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-
     schedule: Schedule
+
     staff_member: User
     location: Location
 
-    created_at: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
-    updated_at: datetime | None = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    updated_at_in_utc: datetime | None = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
 
 
 # Attendance
@@ -219,14 +247,32 @@ class AttendanceCreateClass(AttendanceBaseClass):
 
 
 class Attendance(AttendanceBaseClass):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={datetime: convert_datetime_to_iso_8601_with_z_suffix},
+    )
 
     id: int
 
     schedule_instance: ScheduleInstance
 
     attendance_status: AttendanceEnum
-    created_at: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+
+
+# Attendance Result
+class AttendanceResult(AttendanceBaseClass):
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={datetime: convert_datetime_to_iso_8601_with_z_suffix},
+    )
+
+    schedule_instance: ScheduleInstance
+
+    attendance_status: AttendanceEnum | None
+    created_at_in_utc: datetime | None = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
 
 
 # Attendance Search
@@ -236,6 +282,14 @@ class AttendanceSearchClass(AttendanceBaseClass):
         time_constants.DATE_TIME_FORMAT,
     )
     end_date: date = datetime.utcnow().date()
+
+
+# Stats
+class StatsBaseClass(BaseModel):
+    staff_count: int
+    locations_count: int
+    schedules_count: int
+    schedule_instances_count: int
 
 
 Token.model_rebuild()

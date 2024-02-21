@@ -25,8 +25,10 @@ def get_attendance_by_id(attendance_id: int, db: Session):
 
 def get_all_attendance_by_schedule_ids(schedule_ids: list[int], db: Session):
     """Get attendance for a particular duration from the database"""
-    return db.query(models.AttendanceModel).filter(
-        models.AttendanceModel.schedule_instance_id.in_(schedule_ids)
+    return (
+        db.query(models.AttendanceModel)
+        .filter(models.AttendanceModel.schedule_instance_id.in_(schedule_ids))
+        .all()
     )
 
 

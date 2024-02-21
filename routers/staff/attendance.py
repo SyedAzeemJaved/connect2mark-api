@@ -1,9 +1,7 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 
 from fastapi import Depends, HTTPException, APIRouter
 
-from fastapi_pagination import Page
-from fastapi_pagination.ext.sqlalchemy import paginate
 
 from sqlite.database import get_db
 from sqlalchemy.orm import Session
@@ -11,10 +9,9 @@ from sqlalchemy.orm import Session
 from sqlite.crud import attendance
 from sqlite.crud.schedule_instances import (
     get_schedule_instance_by_id,
-    get_all_schedule_instance_by_date_range_and_user_id,
 )
 
-from sqlite.schemas import Attendance, AttendanceSearchClass, User
+from sqlite.schemas import Attendance, User
 from sqlite.enums import AttendanceEnum
 
 from utils.auth import get_current_user, user_should_be_teacher
@@ -103,26 +100,4 @@ async def mark_attendance(
         schedule_instance_id=schedule_instance_id,
         attendance_status=attendance_status,
         db=db,
-    )
-
-
-@router.post(
-    "",
-    response_model=Page[Attendance],
-)
-async def get_attendance_for_duration(
-    data: AttendanceSearchClass,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    schedule_instances = get_all_schedule_instance_by_date_range_and_user_id(
-        start_date=data.start_date,
-        end_date=data.end_date,
-        user_id=current_user.id,
-        db=db,
-    )
-    return paginate(
-        attendance.get_all_attendance_by_schedule_ids(
-            schedule_ids=[x.id for x in schedule_instances], db=db
-        )
     )

@@ -90,6 +90,20 @@ async def get_all_schedules_for_today(
     return paginate(schedules.get_today_schedules(db=db))
 
 
+@router.get("/staff/{staff_member_id}", response_model=Page[Schedule])
+async def get_all_schedules_for_staff_member(
+    staff_member_id: int, db: Session = Depends(get_db)
+):
+    db_user = get_user_by_id(user_id=staff_member_id, db=db)
+    if not db_user:
+        raise HTTPException(status_code=403, detail="User not found")
+    if db_user.is_admin:
+        raise HTTPException(status_code=403, detail="User is not a staff member")
+    return paginate(
+        schedules.get_all_schedules_by_user_id(user_id=staff_member_id, db=db)
+    )
+
+
 @router.get("/{schedule_id}", response_model=Schedule)
 async def get_schedule_by_id(schedule_id: int, db: Session = Depends(get_db)):
     db_schedule = schedules.get_schedule_by_id(schedule_id=schedule_id, db=db)
@@ -162,6 +176,7 @@ async def update_reoccurring_schedule(
             status_code=403,
             detail="Schedule you are trying update is not of type reoccurring",
         )
+    # TODO
     # You also need to perform check if schedule exists validations here
     await validate_schedule(schedule=schedule)
     return schedules.update_schedule(schedule=schedule, db_schedule=db_schedule, db=db)
@@ -187,13 +202,14 @@ async def update_non_reoccurring_schedule(
             status_code=403,
             detail="Schedule you are trying update is not of type non-reoccurring",
         )
+    # TODO
     # You also need to perform check if schedule exists validations here
     await validate_schedule(schedule=schedule)
     return schedules.update_schedule(schedule=schedule, db_schedule=db_schedule, db=db)
 
 
 @router.delete(
-    "/{location_id}",
+    "/{schedule_id}",
     response_model=CommonResponseClass,
 )
 async def delete_schedule(schedule_id: int, db: Session = Depends(get_db)):

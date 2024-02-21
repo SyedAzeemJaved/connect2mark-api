@@ -1,8 +1,8 @@
 """Added init tables
 
-Revision ID: 4870457e8925
+Revision ID: 448f2921420c
 Revises: 
-Create Date: 2024-01-07 00:33:16.989273
+Create Date: 2024-01-16 18:50:42.696265
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '4870457e8925'
+revision: str = '448f2921420c'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,8 +25,8 @@ def upgrade() -> None:
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('bluetooth_address', sa.String(), nullable=False),
     sa.Column('coordinates', sa.String(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
+    sa.Column('updated_at_in_utc', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('bluetooth_address'),
     sa.UniqueConstraint('coordinates'),
@@ -39,8 +39,8 @@ def upgrade() -> None:
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('password', sa.String(), nullable=False),
     sa.Column('is_admin', sa.Boolean(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
+    sa.Column('updated_at_in_utc', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
@@ -55,8 +55,8 @@ def upgrade() -> None:
     sa.Column('day', sa.Enum('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY', name='daysenum'), nullable=False),
     sa.Column('start_time_in_utc', sa.Time(), nullable=False),
     sa.Column('end_time_in_utc', sa.Time(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
+    sa.Column('updated_at_in_utc', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['location_id'], ['locations.id'], ),
     sa.ForeignKeyConstraint(['staff_member_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -82,8 +82,8 @@ def upgrade() -> None:
     sa.Column('date', sa.Date(), nullable=False),
     sa.Column('start_time_in_utc', sa.Time(), nullable=False),
     sa.Column('end_time_in_utc', sa.Time(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
+    sa.Column('updated_at_in_utc', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['location_id'], ['locations.id'], ),
     sa.ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['staff_member_id'], ['users.id'], ),
@@ -94,7 +94,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('schedule_instance_id', sa.Integer(), nullable=False),
     sa.Column('attendance_status', sa.Enum('PRESENT', 'LATE', name='attendanceenum'), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['schedule_instance_id'], ['schedule_instances.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('schedule_instance_id')
