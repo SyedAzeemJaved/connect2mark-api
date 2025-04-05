@@ -24,7 +24,7 @@ router = APIRouter(
     prefix="/users",
     tags=["admin - users"],
     dependencies=[
-        # Depends(user_should_be_admin),
+        Depends(user_should_be_admin),
     ],
     responses=common_responses(),
 )
