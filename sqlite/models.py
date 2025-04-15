@@ -48,12 +48,9 @@ class UserModel(Base):
         # This will delete associated additional_details when a user is deleted
     )
 
-    # Cascade relationship with ScheduleModel
-    schedules = relationship(
-        "ScheduleModel",
-        uselist=True,
-        primaryjoin="UserModel.id == ScheduleModel.academic_user_id",
-        cascade="all, delete-orphan",
+    schedules = relationship("ScheduleModel", secondary="schedule_users")
+    schedule_instances = relationship(
+        "ScheduleInstanceModel", secondary="schedule_instance_users"
     )
 
     created_at_in_utc = Column(
@@ -142,7 +139,7 @@ class ScheduleModel(Base):
     # )
     ##
     # check back populates and cascade
-    academic_users = relationship("UserModel", secondary=ScheduleUserModel)
+    academic_users = relationship("UserModel", secondary="schedule_users")
 
     location_id = Column(
         Integer, ForeignKey("locations.id"), unique=False, nullable=False
@@ -186,6 +183,17 @@ class ScheduleModel(Base):
         self.end_time_in_utc = schedule.end_time_in_utc
 
 
+# Bridge table for many-to-many relationship
+# between ScheduleInstanceModel and UserModel
+class ScheduleInstanceUserModel(Base):
+    __tablename__ = "schedule_instance_users"
+
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True, nullable=False)
+    schedule_instance_id = Column(
+        Integer, ForeignKey("schedule_instances.id"), primary_key=True, nullable=False
+    )
+
+
 # ScheduleInstance (Class)
 class ScheduleInstanceModel(Base):
     __tablename__ = "schedule_instances"
@@ -204,7 +212,7 @@ class ScheduleInstanceModel(Base):
     # )
     ##
     # check back populates and cascade
-    academic_users = relationship("UserModel", secondary=ScheduleUserModel)
+    academic_users = relationship("UserModel", secondary="schedule_instance_users")
 
     location_id = Column(
         Integer, ForeignKey("locations.id"), unique=False, nullable=False
