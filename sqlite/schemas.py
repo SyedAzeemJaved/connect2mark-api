@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, date, time, timedelta
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 from sqlite.enums import DepartmentsEnum, DesignationsEnum, DaysEnum, AttendanceEnum
 
@@ -76,6 +76,7 @@ class UserBaseClass(BaseModel):
 class UserCreateClass(UserBaseClass):
     password: str
     is_admin: bool = False
+    is_student: bool = False
 
 
 class UserUpdateClass(UserBaseClass):
@@ -93,12 +94,23 @@ class User(UserBaseClass):
     )
 
     id: int
-    is_admin: bool
+    is_admin: bool = False
+    is_student: bool
     additional_details: UserAdditionalDetail | None
     created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
     updated_at_in_utc: datetime | None = (
         get_current_datetime_in_str_iso_8601_with_z_suffix()
     )
+
+    @model_validator(mode="after")
+    def check_is_not_admin_and_student(self) -> "User":
+        is_admin = self.is_admin
+        is_student = self.is_student
+
+        if is_admin and is_student:
+            raise ValueError("Can not be admin and student at the same time")
+
+        return self
 
 
 # Location
@@ -144,7 +156,7 @@ class ScheduleBaseClass(BaseModel):
 
 
 class ScheduleCreateBaseClass(ScheduleBaseClass):
-    staff_member_id: int
+    academic_user_id: int
     location_id: int
 
 
@@ -177,7 +189,7 @@ class Schedule(ScheduleBaseClass):
     id: int
     is_reoccurring: bool
 
-    staff_member: User
+    academic_user: User
     location: Location
 
     date: date | None
@@ -190,7 +202,7 @@ class Schedule(ScheduleBaseClass):
 
 # Schedule Search
 class ScheduleSearchClass(BaseModel):
-    staff_member_id: int
+    academic_user_id: int
     location_id: int
     start_time_in_utc: time = get_current_time_in_str_iso_8601()
     end_time_in_utc: time = get_current_time_in_str_iso_8601(is_end_time=True)
@@ -210,7 +222,7 @@ class ScheduleInstanceBaseClass(BaseModel):
 
 
 class ScheduleInstanceUpdateClass(ScheduleInstanceBaseClass):
-    staff_member_id: int
+    academic_user_id: int
     location_id: int
 
 
@@ -228,7 +240,7 @@ class ScheduleInstance(ScheduleInstanceBaseClass):
 
     schedule: Schedule
 
-    staff_member: User
+    academic_user: User
     location: Location
 
     created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
@@ -286,7 +298,7 @@ class AttendanceSearchClass(AttendanceBaseClass):
 
 # Stats
 class StatsBaseClass(BaseModel):
-    staff_count: int
+    academic_user_count: int
     locations_count: int
     schedules_count: int
     schedule_instances_count: int

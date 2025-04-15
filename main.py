@@ -12,10 +12,10 @@ from routers.admin import (
     attendance_result as admin_attendance_result,
     stats as admin_stats,
 )
-from routers.staff import (
-    schedule_instances as staff_schedule_instances,
-    attendance as staff_attendance,
-    attendance_result as staff_attendance_result,
+from routers.academic import (
+    schedule_instances as academic_schedule_instances,
+    attendance as academic_attendance,
+    attendance_result as academic_attendance_result,
 )
 from routers.common import me as common_me
 
@@ -25,7 +25,7 @@ tags_metadata = [
         "name": "auth",
         "description": "Create JWT based access tokens that use SHA256 enterprise level security.",
     },
-    # Admin level routes
+    # Admin user level routes
     {
         "name": "admin - users",
         "description": "Create, update and view all users saved on the database.",
@@ -44,23 +44,23 @@ tags_metadata = [
     },
     {
         "name": "admin - attendance-result",
-        "description": "View attendance result(s) for schedule instances/classes or staff members in the database.",
+        "description": "View attendance result(s) for schedule instances/classes or academic users in the database.",
     },
     {
         "name": "admin - stats",
         "description": "Get stats for the dashboard.",
     },
-    # Staff member level routes
+    # Academic user level routes
     {
-        "name": "staff - schedule instances or classes",
+        "name": "academic - schedule instances or classes",
         "description": "View all schedule instances for current user saved on the database.",
     },
     {
-        "name": "staff - attendance",
+        "name": "academic - attendance",
         "description": "Mark attendance of a schedule instance or class for current user in the database.",
     },
     {
-        "name": "staff - attendance-result",
+        "name": "academic - attendance-result",
         "description": "View attendance result of a schedule instance or class for current user in the database.",
     },
     # Common user level routes
@@ -74,8 +74,8 @@ origins = [
 ]
 
 app = FastAPI(
-    title="Connect2Mark Backend API and Server Module",
-    description="Python based API to act as a backend for both Connect2Mark FE clients. Note that all date(s) and time(s) to be provided and returned must be/and are in UTC.",
+    title="Safe Check: Multi Layer Classroom Presence System",
+    description="Python based API to act as a backend for both SafeCheck FE clients. Note that all date(s) and time(s) to be provided and returned must be/and are in UTC.",
     version="1.0.0",
     openapi_tags=tags_metadata,
     redoc_url=None,
@@ -92,17 +92,17 @@ app.add_middleware(
 )
 
 app.include_router(jwt_tokens.router)
-# Admin level routes
+# Admin user level routes
 app.include_router(admin_users.router)
 app.include_router(admin_locations.router)
 app.include_router(admin_schedules.router)
 app.include_router(admin_schedule_instances.router)
 app.include_router(admin_attendance_result.router)
 app.include_router(admin_stats.router)
-# Staff member level routes
-app.include_router(staff_schedule_instances.router)
-app.include_router(staff_attendance.router)
-app.include_router(staff_attendance_result.router)
+# Academic user level routes
+app.include_router(academic_schedule_instances.router)
+app.include_router(academic_attendance.router)
+app.include_router(academic_attendance_result.router)
 # Common user level routes
 app.include_router(common_me.router)
 

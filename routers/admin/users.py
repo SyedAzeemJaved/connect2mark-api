@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import Depends, HTTPException, APIRouter
 
 from fastapi_pagination import Page
@@ -35,9 +37,13 @@ async def get_all_admins(db: Session = Depends(get_db)):
     return paginate(users.get_all_admin_users(db=db))
 
 
-@router.get("/staff", response_model=Page[User])
-async def get_all_staff_members(db: Session = Depends(get_db)):
-    return paginate(users.get_all_staff_members(db=db))
+@router.get("/academic", response_model=Page[User])
+async def get_all_academic_users(
+    only_students: Literal["yes", "no"], db: Session = Depends(get_db)
+):
+    return paginate(
+        users.get_all_academic_users(only_students=(only_students == "yes"), db=db)
+    )
 
 
 @router.get("/{user_id}", response_model=User)
@@ -54,9 +60,16 @@ async def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
 )
 async def create_user(user: UserCreateClass, db: Session = Depends(get_db)):
     db_user = users.get_user_by_email(user_email=user.email, db=db)
-    if db_user is None:
-        return users.create_user(user=user, db=db)
-    raise HTTPException(status_code=403, detail="User already exists")
+
+    if db_user:
+        raise HTTPException(status_code=403, detail="User already exists")
+
+    if user.is_admin and user.is_student:
+        raise HTTPException(
+            status_code=403, detail="User can not be admin and student at the same time"
+        )
+
+    return users.create_user(user=user, db=db)
 
 
 @router.put(

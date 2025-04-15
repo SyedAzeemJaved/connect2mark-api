@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Enum,
+    UniqueConstraint,
 )
 
 from sqlalchemy.orm import relationship
@@ -36,20 +37,22 @@ class UserModel(Base):
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     is_admin = Column(Boolean, nullable=False, default=False)
+    is_student = Column(Boolean, nullable=False)
 
     # Define the one-to-one relationship with UserAdditionalDetailModel
     additional_details = relationship(
         "UserAdditionalDetailModel",
         uselist=False,
         primaryjoin="UserModel.id == UserAdditionalDetailModel.user_id",
-        cascade="all, delete-orphan",  # This will delete associated additional_details when a user is deleted
+        cascade="all, delete-orphan",
+        # This will delete associated additional_details when a user is deleted
     )
 
     # Cascade relationship with ScheduleModel
     schedules = relationship(
         "ScheduleModel",
         uselist=True,
-        primaryjoin="UserModel.id == ScheduleModel.staff_member_id",
+        primaryjoin="UserModel.id == ScheduleModel.academic_user_id",
         cascade="all, delete-orphan",
     )
 
@@ -109,23 +112,37 @@ class LocationModel(Base):
         self.coordinates = location.coordinates
 
 
+# Bridge table for many-to-many relationship
+# between ScheduleModel and UserModel
+class ScheduleUserModel(Base):
+    __tablename__ = "schedule_users"
+
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True, nullable=False)
+    schedule_id = Column(
+        Integer, ForeignKey("schedules.id"), primary_key=True, nullable=False
+    )
+
+
 class ScheduleModel(Base):
     __tablename__ = "schedules"
 
     id = Column(Integer, primary_key=True, index=True)
 
-    staff_member_id = Column(
-        Integer,
-        ForeignKey("users.id"),
-        unique=False,
-        nullable=False,
-    )
-    # Define the one-to-one relationship with UserModel
-    staff_member = relationship(
-        "UserModel",
-        uselist=False,
-        primaryjoin="ScheduleModel.staff_member_id == UserModel.id",
-    )
+    # academic_user_id = Column(
+    #     Integer,
+    #     ForeignKey("users.id"),
+    #     unique=False,
+    #     nullable=False,
+    # )
+    # # Define the one-to-one relationship with UserModel
+    # academic_user = relationship(
+    #     "UserModel",
+    #     uselist=False,
+    #     primaryjoin="ScheduleModel.academic_user_id == UserModel.id",
+    # )
+    ##
+    # check back populates and cascade
+    academic_users = relationship("UserModel", secondary=ScheduleUserModel)
 
     location_id = Column(
         Integer, ForeignKey("locations.id"), unique=False, nullable=False
@@ -175,6 +192,31 @@ class ScheduleInstanceModel(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
+    # academic_user_id = Column(
+    #     Integer, ForeignKey("users.id"), unique=False, nullable=False
+    # )
+    # # Define the one-to-one relationship with UserModel
+    # academic_user = relationship(
+    #     "UserModel",
+    #     uselist=False,
+    #     primaryjoin="ScheduleInstanceModel.academic_user_id == UserModel.id",
+    #     cascade="none",
+    # )
+    ##
+    # check back populates and cascade
+    academic_users = relationship("UserModel", secondary=ScheduleUserModel)
+
+    location_id = Column(
+        Integer, ForeignKey("locations.id"), unique=False, nullable=False
+    )
+    # Define the one-to-one relationship with LocationModel
+    location = relationship(
+        "LocationModel",
+        uselist=False,
+        primaryjoin="ScheduleInstanceModel.location_id == LocationModel.id",
+        cascade="none",
+    )
+
     schedule_id = Column(
         Integer,
         ForeignKey("schedules.id", ondelete="CASCADE"),
@@ -189,28 +231,6 @@ class ScheduleInstanceModel(Base):
         cascade="none",
     )
 
-    staff_member_id = Column(
-        Integer, ForeignKey("users.id"), unique=False, nullable=False
-    )
-    # Define the one-to-one relationship with UserModel
-    staff_member = relationship(
-        "UserModel",
-        uselist=False,
-        primaryjoin="ScheduleInstanceModel.staff_member_id == UserModel.id",
-        cascade="none",
-    )
-
-    location_id = Column(
-        Integer, ForeignKey("locations.id"), unique=False, nullable=False
-    )
-    # Define the one-to-one relationship with LocationModel
-    location = relationship(
-        "LocationModel",
-        uselist=False,
-        primaryjoin="ScheduleInstanceModel.location_id == LocationModel.id",
-        cascade="none",
-    )
-
     date = Column(Date, nullable=False)
     start_time_in_utc = Column(Time, nullable=False)
     end_time_in_utc = Column(Time, nullable=False)
@@ -222,15 +242,35 @@ class ScheduleInstanceModel(Base):
         DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
     )
 
-    def update(self, schedule_instance: ScheduleInstanceUpdateClass, **kwargs):
-        self.staff_member_id = schedule_instance.staff_member_id
-        self.location_id = schedule_instance.location_id
+    # def update(self, schedule_instance: ScheduleInstanceUpdateClass, **kwargs):
+    #     self.academic_user_id = schedule_instance.academic_user_id
+    #     self.location_id = schedule_instance.location_id
 
 
 class AttendanceModel(Base):
     __tablename__ = "attendances"
+    __table_args__ = (
+        UniqueConstraint(
+            "schedule_instance_id",
+            "user_id",
+            name="uix_attendance_schedule_instance_user",
+        ),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        unique=False,
+        nullable=False,
+    )
+    # Define the one-to-one relationship with UserModel
+    user = relationship(
+        "UserModel",
+        uselist=False,
+        primaryjoin="AttendanceModel.user_id == UserModel.id",
+    )
 
     schedule_instance_id = Column(
         Integer,

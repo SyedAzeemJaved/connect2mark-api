@@ -57,7 +57,7 @@ def get_today_schedules(db: Session):
 def get_all_schedules_by_user_id(user_id: int, db: Session):
     """ "Get all schedules (reoccurring) and non-reoccurring for a particular user"""
     return db.query(models.ScheduleModel).filter(
-        models.ScheduleModel.staff_member_id == user_id
+        models.ScheduleModel.academic_user_id == user_id
     )
 
 
@@ -69,7 +69,7 @@ def get_reoccurring_schedule(schedule: ScheduleReoccurringSearchClass, db: Sessi
             and_(
                 models.ScheduleModel.start_time_in_utc == schedule.start_time_in_utc,
                 models.ScheduleModel.end_time_in_utc == schedule.end_time_in_utc,
-                models.ScheduleModel.staff_member_id == schedule.staff_member_id,
+                models.ScheduleModel.academic_user_id == schedule.academic_user_id,
                 models.ScheduleModel.location_id == schedule.location_id,
                 models.ScheduleModel.day == schedule.day,
             )
@@ -88,7 +88,7 @@ def get_non_reoccurring_schedule(
             and_(
                 models.ScheduleModel.start_time_in_utc == schedule.start_time_in_utc,
                 models.ScheduleModel.end_time_in_utc == schedule.end_time_in_utc,
-                models.ScheduleModel.staff_member_id == schedule.staff_member_id,
+                models.ScheduleModel.academic_user_id == schedule.academic_user_id,
                 models.ScheduleModel.location_id == schedule.location_id,
                 models.ScheduleModel.date == schedule.date,
             )

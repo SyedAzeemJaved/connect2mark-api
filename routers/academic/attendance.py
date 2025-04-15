@@ -18,8 +18,8 @@ from utils.auth import get_current_user, user_should_be_teacher
 from utils.responses import common_responses
 
 router = APIRouter(
-    prefix="/staff/attendance",
-    tags=["staff - attendance"],
+    prefix="/academic/attendance",
+    tags=["academic - attendance"],
     dependencies=[
         Depends(user_should_be_teacher),
     ],
@@ -43,7 +43,7 @@ async def mark_attendance(
         raise HTTPException(
             status_code=403, detail="Schedule instance or class not found"
         )
-    if not db_schedule_instance.staff_member_id == current_user.id:
+    if not db_schedule_instance.academic_user_id == current_user.id:
         raise HTTPException(
             status_code=403,
             detail="Can not mark attendance on a schedule instance or class that is not yours",
