@@ -66,7 +66,8 @@ async def create_user(user: UserCreateClass, db: Session = Depends(get_db)):
 
     if user.is_admin and user.is_student:
         raise HTTPException(
-            status_code=403, detail="User can not be admin and student at the same time"
+            status_code=403,
+            detail="User can not be admin and student at the same time",
         )
 
     return users.create_user(user=user, db=db)
@@ -85,7 +86,8 @@ async def update_user(
     other_object = users.get_user_by_email(user_email=user.email, db=db)
     if other_object:
         if not are_object_to_edit_and_other_object_same(
-            obj_to_edit=db_user, other_object_with_same_unique_field=other_object
+            obj_to_edit=db_user,
+            other_object_with_same_unique_field=other_object,
         ):
             raise HTTPException(
                 status_code=403, detail="User with same email already exists"
@@ -112,7 +114,8 @@ async def update_user(
                     other_object_with_same_unique_field=other_object,
                 ):
                     raise HTTPException(
-                        status_code=403, detail="This phone number is already in use"
+                        status_code=403,
+                        detail="This phone number is already in use",
                     )
     return users.update_user(user=user, db_user=db_user, db=db)
 

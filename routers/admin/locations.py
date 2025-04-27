@@ -55,7 +55,8 @@ async def create_location(
         db=db,
     ):
         raise HTTPException(
-            status_code=403, detail="Bluetooth address or coordinates already in use"
+            status_code=403,
+            detail="Bluetooth address or coordinates already in use",
         )
     return locations.create_location(location=location, db=db)
 

@@ -39,7 +39,8 @@ def create_attendance(
 ):
     """Create a new attendance in the database"""
     db_attendance = models.AttendanceModel(
-        schedule_instance_id=schedule_instance_id, attendance_status=attendance_status
+        schedule_instance_id=schedule_instance_id,
+        attendance_status=attendance_status,
     )
     db.add(db_attendance)
     db.commit()

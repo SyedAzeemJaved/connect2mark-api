@@ -19,32 +19,39 @@ from routers.academic import (
 )
 from routers.common import me as common_me
 
+
 tags_metadata = [
     # Auth
     {
         "name": "auth",
-        "description": "Create JWT based access tokens that use SHA256 enterprise level security.",
+        "description": "Create JWT based access tokens that use SHA256 "
+        + "enterprise level security.",
     },
     # Admin user level routes
     {
         "name": "admin - users",
-        "description": "Create, update and view all users saved on the database.",
+        "description": "Create, update and view all users saved on the "
+        + "database.",
     },
     {
         "name": "admin - locations",
-        "description": "Create, update and view all locations saved on the database.",
+        "description": "Create, update and view all locations saved on the "
+        + "database.",
     },
     {
         "name": "admin - schedules",
-        "description": "Create, update and view all schedules saved on the database.",
+        "description": "Create, update and view all schedules saved on the "
+        + "database.",
     },
     {
         "name": "admin - schedule instances or classes",
-        "description": "Update and view all schedule instances saved on the database.",
+        "description": "Update and view all schedule instances saved on the "
+        + "database.",
     },
     {
         "name": "admin - attendance-result",
-        "description": "View attendance result(s) for schedule instances/classes or academic users in the database.",
+        "description": "View attendance result(s) for schedule "
+        + "instances/classes or academic users in the database.",
     },
     {
         "name": "admin - stats",
@@ -53,15 +60,18 @@ tags_metadata = [
     # Academic user level routes
     {
         "name": "academic - schedule instances or classes",
-        "description": "View all schedule instances for current user saved on the database.",
+        "description": "View all schedule instances for current user saved on "
+        + "the database.",
     },
     {
         "name": "academic - attendance",
-        "description": "Mark attendance of a schedule instance or class for current user in the database.",
+        "description": "Mark attendance of a schedule instance or class for "
+        + "current user in the database.",
     },
     {
         "name": "academic - attendance-result",
-        "description": "View attendance result of a schedule instance or class for current user in the database.",
+        "description": "View attendance result of a schedule instance or class "
+        + "for current user in the database.",
     },
     # Common user level routes
     {
@@ -75,7 +85,9 @@ origins = [
 
 app = FastAPI(
     title="Safe Check: Multi Layer Classroom Presence System",
-    description="Python based API to act as a backend for both SafeCheck FE clients. Note that all date(s) and time(s) to be provided and returned must be/and are in UTC.",
+    description="Python based API to act as a backend for both "
+    + "SafeCheck FE clients. Note that all date(s) and time(s) "
+    + "to be provided and returned must be/and are in UTC.",
     version="1.0.0",
     openapi_tags=tags_metadata,
     redoc_url=None,
@@ -90,6 +102,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 app.include_router(jwt_tokens.router)
 # Admin user level routes

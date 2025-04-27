@@ -3,7 +3,12 @@ from datetime import datetime, date, time, timedelta
 
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
-from sqlite.enums import DepartmentsEnum, DesignationsEnum, DaysEnum, AttendanceEnum
+from sqlite.enums import (
+    DepartmentsEnum,
+    DesignationsEnum,
+    DaysEnum,
+    AttendanceEnum,
+)
 
 from utils.date_utils import (
     return_day_of_week_name,

@@ -24,7 +24,12 @@ from sqlite.schemas import (
     ScheduleNonReoccurringUpdateClass,
     ScheduleInstanceUpdateClass,
 )
-from sqlite.enums import DepartmentsEnum, DesignationsEnum, DaysEnum, AttendanceEnum
+from sqlite.enums import (
+    DepartmentsEnum,
+    DesignationsEnum,
+    DaysEnum,
+    AttendanceEnum,
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -76,10 +81,14 @@ class UserAdditionalDetailModel(Base):
 
     phone = Column(String, unique=True, nullable=True, default=None)
     department = Column(
-        Enum(DepartmentsEnum), nullable=True, default=DepartmentsEnum.NOT_SPECIFIED
+        Enum(DepartmentsEnum),
+        nullable=True,
+        default=DepartmentsEnum.NOT_SPECIFIED,
     )
     designation = Column(
-        Enum(DesignationsEnum), nullable=True, default=DesignationsEnum.NOT_SPECIFIED
+        Enum(DesignationsEnum),
+        nullable=True,
+        default=DesignationsEnum.NOT_SPECIFIED,
     )
 
     def update(self, user: UserUpdateClass, **kwargs):
@@ -190,7 +199,10 @@ class ScheduleInstanceUserModel(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"), primary_key=True, nullable=False)
     schedule_instance_id = Column(
-        Integer, ForeignKey("schedule_instances.id"), primary_key=True, nullable=False
+        Integer,
+        ForeignKey("schedule_instances.id"),
+        primary_key=True,
+        nullable=False,
     )
 
 
