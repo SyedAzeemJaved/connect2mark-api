@@ -142,7 +142,9 @@ def upgrade() -> None:
             ["location_id"],
             ["locations.id"],
         ),
-        sa.ForeignKeyConstraint(["schedule_id"], ["schedules.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["schedule_id"], ["schedules.id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
@@ -193,7 +195,9 @@ def upgrade() -> None:
             name="uix_attendance_schedule_instance_user",
         ),
     )
-    op.create_index(op.f("ix_attendances_id"), "attendances", ["id"], unique=False)
+    op.create_index(
+        op.f("ix_attendances_id"), "attendances", ["id"], unique=False
+    )
     op.create_table(
         "schedule_instance_users",
         sa.Column("user_id", sa.Integer(), nullable=False),
@@ -217,7 +221,9 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_attendances_id"), table_name="attendances")
     op.drop_table("attendances")
     op.drop_table("schedule_users")
-    op.drop_index(op.f("ix_schedule_instances_id"), table_name="schedule_instances")
+    op.drop_index(
+        op.f("ix_schedule_instances_id"), table_name="schedule_instances"
+    )
     op.drop_table("schedule_instances")
     op.drop_index(
         op.f("ix_user_additional_details_id"),
