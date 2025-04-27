@@ -42,7 +42,7 @@ async def get_current_user(
 
 
 async def user_should_be_admin(
-    current_user: Annotated[UserModel, Depends(get_current_user)]
+    current_user: Annotated[UserModel, Depends(get_current_user)],
 ):
     if current_user.is_admin:
         return current_user
@@ -53,7 +53,7 @@ async def user_should_be_admin(
 
 
 async def user_should_be_teacher(
-    current_user: Annotated[UserModel, Depends(get_current_user)]
+    current_user: Annotated[UserModel, Depends(get_current_user)],
 ):
     if not current_user.is_admin:
         return current_user

@@ -24,7 +24,12 @@ from sqlite.schemas import (
     ScheduleNonReoccurringUpdateClass,
     ScheduleInstanceUpdateClass,
 )
-from sqlite.enums import DepartmentsEnum, DesignationsEnum, DaysEnum, AttendanceEnum
+from sqlite.enums import (
+    DepartmentsEnum,
+    DesignationsEnum,
+    DaysEnum,
+    AttendanceEnum,
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -72,14 +77,20 @@ class UserAdditionalDetailModel(Base):
     __tablename__ = "user_additional_details"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id"), unique=True, nullable=False
+    )
 
     phone = Column(String, unique=True, nullable=True, default=None)
     department = Column(
-        Enum(DepartmentsEnum), nullable=True, default=DepartmentsEnum.NOT_SPECIFIED
+        Enum(DepartmentsEnum),
+        nullable=True,
+        default=DepartmentsEnum.NOT_SPECIFIED,
     )
     designation = Column(
-        Enum(DesignationsEnum), nullable=True, default=DesignationsEnum.NOT_SPECIFIED
+        Enum(DesignationsEnum),
+        nullable=True,
+        default=DesignationsEnum.NOT_SPECIFIED,
     )
 
     def update(self, user: UserUpdateClass, **kwargs):
@@ -114,7 +125,9 @@ class LocationModel(Base):
 class ScheduleUserModel(Base):
     __tablename__ = "schedule_users"
 
-    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True, nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id"), primary_key=True, nullable=False
+    )
     schedule_id = Column(
         Integer, ForeignKey("schedules.id"), primary_key=True, nullable=False
     )
@@ -167,7 +180,9 @@ class ScheduleModel(Base):
         DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
     )
 
-    def update_reoccurring(self, schedule: ScheduleReoccurringUpdateClass, **kwargs):
+    def update_reoccurring(
+        self, schedule: ScheduleReoccurringUpdateClass, **kwargs
+    ):
         self.title = schedule.title
         self.day = schedule.day
         self.start_time_in_utc = schedule.start_time_in_utc
@@ -188,9 +203,14 @@ class ScheduleModel(Base):
 class ScheduleInstanceUserModel(Base):
     __tablename__ = "schedule_instance_users"
 
-    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True, nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id"), primary_key=True, nullable=False
+    )
     schedule_instance_id = Column(
-        Integer, ForeignKey("schedule_instances.id"), primary_key=True, nullable=False
+        Integer,
+        ForeignKey("schedule_instances.id"),
+        primary_key=True,
+        nullable=False,
     )
 
 
@@ -212,7 +232,9 @@ class ScheduleInstanceModel(Base):
     # )
     ##
     # check back populates and cascade
-    academic_users = relationship("UserModel", secondary="schedule_instance_users")
+    academic_users = relationship(
+        "UserModel", secondary="schedule_instance_users"
+    )
 
     location_id = Column(
         Integer, ForeignKey("locations.id"), unique=False, nullable=False
@@ -250,7 +272,8 @@ class ScheduleInstanceModel(Base):
         DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
     )
 
-    # def update(self, schedule_instance: ScheduleInstanceUpdateClass, **kwargs):
+    # def update(self, schedule_instance: ScheduleInstanceUpdateClass,
+    #  **kwargs):
     #     self.academic_user_id = schedule_instance.academic_user_id
     #     self.location_id = schedule_instance.location_id
 
@@ -290,7 +313,7 @@ class AttendanceModel(Base):
     schedule_instance = relationship(
         "ScheduleInstanceModel",
         uselist=False,
-        primaryjoin="AttendanceModel.schedule_instance_id == ScheduleInstanceModel.id",
+        primaryjoin="AttendanceModel.schedule_instance_id == ScheduleInstanceModel.id",  # noqa: E501
         cascade="none",
     )
 

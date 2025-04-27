@@ -53,16 +53,19 @@ async def validate_schedule(
         23, 30, 0, tzinfo=schedule.end_time_in_utc.tzinfo
     ):
         raise HTTPException(
-            status_code=403, detail="End time should not be greater than 11:30PM"
+            status_code=403,
+            detail="End time should not be greater than 11:30PM",
         )
     # Checks for non-reoccurring schedules
     if isinstance(
-        schedule, ScheduleNonReoccurringCreateClass | ScheduleNonReoccurringUpdateClass
+        schedule,
+        ScheduleNonReoccurringCreateClass | ScheduleNonReoccurringUpdateClass,
     ):
         # Should not be in past
         if schedule.date <= datetime.utcnow().date():
             raise HTTPException(
-                status_code=403, detail="Date should not be today or in the past"
+                status_code=403,
+                detail="Date should not be today or in the past",
             )
 
 

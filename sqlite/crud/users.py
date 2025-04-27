@@ -3,7 +3,11 @@ from datetime import datetime
 from sqlalchemy.orm import Session, joinedload
 
 from sqlite import models
-from sqlite.schemas import UserCreateClass, UserUpdateClass, UserPasswordUpdateClass
+from sqlite.schemas import (
+    UserCreateClass,
+    UserUpdateClass,
+    UserPasswordUpdateClass,
+)
 from sqlite.enums import DepartmentsEnum, DesignationsEnum
 
 from utils.password import get_password_hash
@@ -92,7 +96,9 @@ def update_user(user: UserUpdateClass, db_user: models.UserModel, db: Session):
 
 
 def update_user_password(
-    new_password: UserPasswordUpdateClass, db_user: models.UserModel, db: Session
+    new_password: UserPasswordUpdateClass,
+    db_user: models.UserModel,
+    db: Session,
 ):
     """Update a user's password on the database"""
     new_password.new_password = get_password_hash(password=new_password.new_password)

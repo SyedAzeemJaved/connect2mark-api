@@ -11,7 +11,9 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-event.listen(engine, "connect", lambda c, _: c.execute("pragma foreign_keys=on"))
+event.listen(
+    engine, "connect", lambda c, _: c.execute("pragma foreign_keys=on")
+)
 
 Base = declarative_base()
 
