@@ -84,18 +84,18 @@ async def get_all_schedule_instances_for_today(db: Session = Depends(get_db)):
 
 
 @router.get(
-    "/today/{staff_member_id}",
-    summary="Get All Schedules Instances For A Staff Member For Today (Current Date)",
+    "/today/{academic_user_id}",
+    summary="Get All Schedules Instances For An Academic User For Today (Current Date)",
     response_model=Page[ScheduleInstance],
 )
-async def get_all_schedule_instances_for_staff_member_for_today(
-    staff_member_id: int, db: Session = Depends(get_db)
+async def get_all_schedule_instances_for_academic_users_for_today(
+    academic_user_id: int, db: Session = Depends(get_db)
 ):
-    db_user = get_user_by_id(user_id=staff_member_id, db=db)
+    db_user = get_user_by_id(user_id=academic_user_id, db=db)
     if not db_user:
         raise HTTPException(status_code=403, detail="User not found")
     if db_user.is_admin:
-        raise HTTPException(status_code=403, detail="User is not a staff member")
+        raise HTTPException(status_code=403, detail="User is not an academic member")
     return paginate(
         schedule_instances.get_today_schedule_instances_by_user_id(
             user_id=db_user.id, db=db
@@ -130,16 +130,24 @@ async def update_schedule_instance(
     )
     if db_schedule_instance is None:
         raise HTTPException(status_code=404, detail="Schedule instance not found")
-    new_staff_member = get_user_by_id(user_id=schedule_instance.staff_member_id, db=db)
-    if not new_staff_member:
+
+    new_academic_user = get_user_by_id(
+        user_id=schedule_instance.academic_user_id, db=db
+    )
+
+    if not new_academic_user:
         raise HTTPException(status_code=404, detail="User not found")
-    if new_staff_member.is_admin:
-        raise HTTPException(status_code=403, detail="User should be a staff member")
+
+    if new_academic_user.is_admin:
+        raise HTTPException(status_code=403, detail="User should be an academic member")
+
     if not get_location_by_id(location_id=schedule_instance.location_id, db=db):
         raise HTTPException(status_code=404, detail="Location not found")
+
     await should_schedule_instance_be_edited_or_deleted(
         schedule_instance=db_schedule_instance, db=db
     )
+
     return schedule_instances.update_schedule_instance(
         schedule_instance=schedule_instance,
         db_schedule_instance=db_schedule_instance,

@@ -17,8 +17,8 @@ from utils.auth import get_current_user, user_should_be_teacher
 from utils.responses import common_responses
 
 router = APIRouter(
-    prefix="/staff/attendance-result",
-    tags=["staff - attendance-result"],
+    prefix="/academic/attendance-result",
+    tags=["academic - attendance-result"],
     dependencies=[
         Depends(user_should_be_teacher),
     ],
@@ -51,12 +51,16 @@ async def get_attendance_for_duration(
         transformer=lambda x: [
             AttendanceResult(
                 schedule_instance=item,
-                attendance_status=attendance_dict.get(item.id).attendance_status
-                if attendance_dict.get(item.id)
-                else None,
-                created_at_in_utc=attendance_dict.get(item.id).created_at_in_utc
-                if attendance_dict.get(item.id)
-                else None,
+                attendance_status=(
+                    attendance_dict.get(item.id).attendance_status
+                    if attendance_dict.get(item.id)
+                    else None
+                ),
+                created_at_in_utc=(
+                    attendance_dict.get(item.id).created_at_in_utc
+                    if attendance_dict.get(item.id)
+                    else None
+                ),
             )
             for item in x
         ],

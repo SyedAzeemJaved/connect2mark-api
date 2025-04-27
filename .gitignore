@@ -2,4 +2,4 @@ env/
 .env
 .vscode
 __pycache__/
-# sqlite.db
+sqlite.db

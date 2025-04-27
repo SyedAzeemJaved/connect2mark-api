@@ -36,10 +36,12 @@ router = APIRouter(
 
 
 async def validate_schedule(
-    schedule: ScheduleReoccurringCreateClass
-    | ScheduleNonReoccurringCreateClass
-    | ScheduleReoccurringUpdateClass
-    | ScheduleNonReoccurringUpdateClass,
+    schedule: (
+        ScheduleReoccurringCreateClass
+        | ScheduleNonReoccurringCreateClass
+        | ScheduleReoccurringUpdateClass
+        | ScheduleNonReoccurringUpdateClass
+    ),
 ):
     # Check if start_time_in_utc is less than end_time_in_utc
     if schedule.start_time_in_utc >= schedule.end_time_in_utc:
@@ -90,17 +92,17 @@ async def get_all_schedules_for_today(
     return paginate(schedules.get_today_schedules(db=db))
 
 
-@router.get("/staff/{staff_member_id}", response_model=Page[Schedule])
-async def get_all_schedules_for_staff_member(
-    staff_member_id: int, db: Session = Depends(get_db)
+@router.get("/academic/{academic_user_id}", response_model=Page[Schedule])
+async def get_all_schedules_for_academic_users(
+    academic_user_id: int, db: Session = Depends(get_db)
 ):
-    db_user = get_user_by_id(user_id=staff_member_id, db=db)
+    db_user = get_user_by_id(user_id=academic_user_id, db=db)
     if not db_user:
         raise HTTPException(status_code=403, detail="User not found")
     if db_user.is_admin:
-        raise HTTPException(status_code=403, detail="User is not a staff member")
+        raise HTTPException(status_code=403, detail="User is not an academic user")
     return paginate(
-        schedules.get_all_schedules_by_user_id(user_id=staff_member_id, db=db)
+        schedules.get_all_schedules_by_user_id(user_id=academic_user_id, db=db)
     )
 
 
@@ -119,11 +121,14 @@ async def get_schedule_by_id(schedule_id: int, db: Session = Depends(get_db)):
 async def create_reoccuring_schedule(
     schedule: ScheduleReoccurringCreateClass, db: Session = Depends(get_db)
 ):
-    staff_member = get_user_by_id(user_id=schedule.staff_member_id, db=db)
-    if not staff_member or staff_member.is_admin:
-        raise HTTPException(status_code=403, detail="Staff member does not exist")
+    academic_user = get_user_by_id(user_id=schedule.academic_user_id, db=db)
+
+    if not academic_user or academic_user.is_admin:
+        raise HTTPException(status_code=403, detail="Academic user does not exist")
+
     if not get_location_by_id(location_id=schedule.location_id, db=db):
         raise HTTPException(status_code=403, detail="Location does not exist")
+
     # Check if reoccurring schedule already exists
     if schedules.get_reoccurring_schedule(
         schedule=schedule,
@@ -141,11 +146,14 @@ async def create_reoccuring_schedule(
 async def create_non_reoccuring_schedule(
     schedule: ScheduleNonReoccurringCreateClass, db: Session = Depends(get_db)
 ):
-    staff_member = get_user_by_id(user_id=schedule.staff_member_id, db=db)
-    if not staff_member or staff_member.is_admin:
-        raise HTTPException(status_code=403, detail="Staff member does not exist")
+    academic_user = get_user_by_id(user_id=schedule.academic_user_id, db=db)
+
+    if not academic_user or academic_user.is_admin:
+        raise HTTPException(status_code=403, detail="Academic user does not exist")
+
     if not get_location_by_id(location_id=schedule.location_id, db=db):
         raise HTTPException(status_code=403, detail="Location does not exist")
+
     # Check if non-reoccurring schedule already exists
     if schedules.get_non_reoccurring_schedule(
         schedule=schedule,

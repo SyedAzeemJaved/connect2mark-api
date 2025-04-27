@@ -27,7 +27,7 @@ def get_all_schedule_instance_by_date_range_and_user_id(
         and_(
             models.ScheduleInstanceModel.date >= start_date,
             models.ScheduleInstanceModel.date <= end_date,
-            models.ScheduleInstanceModel.staff_member_id == user_id,
+            models.ScheduleInstanceModel.academic_user_id == user_id,
         )
     )
 
@@ -45,7 +45,7 @@ def get_today_schedule_instances_by_user_id(user_id: int, db: Session):
     now = datetime.utcnow()
     return db.query(models.ScheduleInstanceModel).filter(
         and_(
-            models.ScheduleInstanceModel.staff_member_id == user_id,
+            models.ScheduleInstanceModel.academic_user_id == user_id,
             models.ScheduleInstanceModel.date == now.date(),
         )
     )
@@ -53,7 +53,7 @@ def get_today_schedule_instances_by_user_id(user_id: int, db: Session):
 
 def get_exact_schedule_instance(
     schedule_id: int,
-    staff_member_id: int,
+    academic_user_id: int,
     location_id,
     date: date | None,
     start_time_in_utc: datetime,
@@ -66,7 +66,7 @@ def get_exact_schedule_instance(
         .filter(
             and_(
                 models.ScheduleInstanceModel.schedule_id == schedule_id,
-                models.ScheduleInstanceModel.staff_member_id == staff_member_id,
+                models.ScheduleInstanceModel.academic_user_id == academic_user_id,
                 models.ScheduleInstanceModel.location_id == location_id,
                 models.ScheduleInstanceModel.date == date,
                 models.ScheduleInstanceModel.start_time_in_utc == start_time_in_utc,

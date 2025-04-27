@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "connect2mark"
+version = "0.1.0"
+description = ""
+authors = ["syedazeemjaved <syedazeemjaved@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.103.1"
+fastapi-pagination = "^0.12.17"
+alembic = "^1.12.0"
+sqlalchemy = "^2.0.20"
+python-dotenv = "^1.0.0"
+python-jose = "^3.3.0"
+python-multipart = "^0.0.6"
+redis = "^5.0.2"
+passlib = {version = "^1.7.4", extras = ["bcrypt"]}
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+flake8 = "^7.2.0"
+uvicorn = "^0.34.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

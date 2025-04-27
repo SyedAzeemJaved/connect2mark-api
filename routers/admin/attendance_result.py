@@ -28,23 +28,23 @@ router = APIRouter(
 
 
 @router.post(
-    "/{staff_member_id}",
+    "/{academic_user_id}",
     response_model=Page[AttendanceResult],
 )
 async def get_attendance_for_duration(
-    staff_member_id: int,
+    academic_user_id: int,
     data: AttendanceSearchClass,
     db: Session = Depends(get_db),
 ):
-    db_user = get_user_by_id(user_id=staff_member_id, db=db)
+    db_user = get_user_by_id(user_id=academic_user_id, db=db)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     if db_user.is_admin:
-        raise HTTPException(status_code=403, detail="User is not a staff member")
+        raise HTTPException(status_code=403, detail="User is not an academic user")
     schedule_instances = get_all_schedule_instance_by_date_range_and_user_id(
         start_date=data.start_date,
         end_date=data.end_date,
-        user_id=staff_member_id,
+        user_id=academic_user_id,
         db=db,
     )
     attendance_list = attendance.get_all_attendance_by_schedule_ids(

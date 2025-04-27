@@ -18,11 +18,14 @@ def get_all_admin_users(db: Session):
     )
 
 
-def get_all_staff_members(db: Session):
-    """Get all staff members from the database"""
+def get_all_academic_users(only_students: bool, db: Session):
+    """Get all academic users from the database"""
     return (
         db.query(models.UserModel)
-        .filter(models.UserModel.is_admin == False)
+        .filter(
+            models.UserModel.is_admin == False,
+            models.UserModel.is_student == only_students,
+        )
         .options(joinedload(models.UserModel.additional_details))
     )
 
@@ -62,6 +65,7 @@ def create_user(user: UserCreateClass, db: Session):
     """Create a new user, with or without it's additional details in the database"""
     user.password = get_password_hash(user.password)
     db_user = models.UserModel(**user.__dict__)
+
     if not user.is_admin:
         db_user.additional_details = models.UserAdditionalDetailModel(
             phone=None,
