@@ -13,3 +13,6 @@ cascade relationships, when scheduleinstance and attendance
 
 replace all occurances of 'staff_member' to 'academic_user'
 intall stubs - https://stackoverflow.com/questions/66134021/how-to-resolve-mypy-error-with-sqlalchemy-enum
+
+
+use aiosqlite

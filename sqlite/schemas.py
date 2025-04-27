@@ -73,7 +73,7 @@ class UserBaseClass(BaseModel):
             raise ValueError("must not contain a space")
         if "," in v:
             raise ValueError("must not contain any commas")
-        if not "@" in v:
+        if "@" not in v:
             raise ValueError("must be a valid email address")
         return v
 
@@ -102,7 +102,9 @@ class User(UserBaseClass):
     is_admin: bool = False
     is_student: bool
     additional_details: UserAdditionalDetail | None
-    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
     updated_at_in_utc: datetime | None = (
         get_current_datetime_in_str_iso_8601_with_z_suffix()
     )
@@ -147,7 +149,9 @@ class Location(LocationBaseClass):
     )
 
     id: int
-    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
     updated_at_in_utc: datetime | None = (
         get_current_datetime_in_str_iso_8601_with_z_suffix()
     )
@@ -199,7 +203,9 @@ class Schedule(ScheduleBaseClass):
 
     date: date | None
     day: DaysEnum
-    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
     updated_at_in_utc: datetime | None = (
         get_current_datetime_in_str_iso_8601_with_z_suffix()
     )
@@ -248,7 +254,9 @@ class ScheduleInstance(ScheduleInstanceBaseClass):
     academic_user: User
     location: Location
 
-    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
     updated_at_in_utc: datetime | None = (
         get_current_datetime_in_str_iso_8601_with_z_suffix()
     )
@@ -274,7 +282,9 @@ class Attendance(AttendanceBaseClass):
     schedule_instance: ScheduleInstance
 
     attendance_status: AttendanceEnum
-    created_at_in_utc: datetime = get_current_datetime_in_str_iso_8601_with_z_suffix()
+    created_at_in_utc: datetime = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
 
 
 # Attendance Result
