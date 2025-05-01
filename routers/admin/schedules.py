@@ -1,4 +1,4 @@
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timezone
 
 from fastapi import Depends, HTTPException, APIRouter
 
@@ -19,23 +19,26 @@ from sqlite.schemas import (
     ScheduleNonReoccurringUpdateClass,
     Schedule,
     CommonResponseClass,
+    # Search
+    ScheduleReoccurringSearchClass,
+    ScheduleNonReoccurringSearchClass,
 )
 from sqlite.enums import DaysEnum
 
-from utils.auth import user_should_be_admin
+from utils.auth import should_be_admin_user
 from utils.responses import common_responses
 
 router = APIRouter(
     prefix="/schedules",
     tags=["admin - schedules"],
     dependencies=[
-        Depends(user_should_be_admin),
+        Depends(should_be_admin_user),
     ],
     responses=common_responses(),
 )
 
 
-async def validate_schedule(
+def validate_schedule(
     schedule: (
         ScheduleReoccurringCreateClass
         | ScheduleNonReoccurringCreateClass
@@ -62,7 +65,7 @@ async def validate_schedule(
         ScheduleNonReoccurringCreateClass | ScheduleNonReoccurringUpdateClass,
     ):
         # Should not be in past
-        if schedule.date <= datetime.utcnow().date():
+        if schedule.date <= datetime.now(tz=timezone.utc).date():
             raise HTTPException(
                 status_code=403,
                 detail="Date should not be today or in the past",
@@ -80,7 +83,9 @@ async def get_all_schedules_by_date(date: date, db: Session = Depends(get_db)):
 
 
 @router.get("/day/{day}", response_model=Page[Schedule])
-async def get_all_schedules_by_day(day: DaysEnum, db: Session = Depends(get_db)):
+async def get_all_schedules_by_day(
+    day: DaysEnum, db: Session = Depends(get_db)
+):
     return paginate(schedules.get_all_schedules_by_day(day=day, db=db))
 
 
@@ -100,10 +105,15 @@ async def get_all_schedules_for_academic_users(
     academic_user_id: int, db: Session = Depends(get_db)
 ):
     db_user = get_user_by_id(user_id=academic_user_id, db=db)
+
     if not db_user:
         raise HTTPException(status_code=403, detail="User not found")
+
     if db_user.is_admin:
-        raise HTTPException(status_code=403, detail="User is not an academic user")
+        raise HTTPException(
+            status_code=403, detail="User is not an academic user"
+        )
+
     return paginate(
         schedules.get_all_schedules_by_user_id(user_id=academic_user_id, db=db)
     )
@@ -112,8 +122,10 @@ async def get_all_schedules_for_academic_users(
 @router.get("/{schedule_id}", response_model=Schedule)
 async def get_schedule_by_id(schedule_id: int, db: Session = Depends(get_db)):
     db_schedule = schedules.get_schedule_by_id(schedule_id=schedule_id, db=db)
+
     if db_schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
+
     return db_schedule
 
 
@@ -124,22 +136,27 @@ async def get_schedule_by_id(schedule_id: int, db: Session = Depends(get_db)):
 async def create_reoccuring_schedule(
     schedule: ScheduleReoccurringCreateClass, db: Session = Depends(get_db)
 ):
-    academic_user = get_user_by_id(user_id=schedule.academic_user_id, db=db)
+    db_academic_user = get_user_by_id(user_id=schedule.academic_user_id, db=db)
 
-    if not academic_user or academic_user.is_admin:
-        raise HTTPException(status_code=403, detail="Academic user does not exist")
+    if not db_academic_user or db_academic_user.is_admin:
+        raise HTTPException(
+            status_code=403, detail="Academic user does not exist"
+        )
 
     if not get_location_by_id(location_id=schedule.location_id, db=db):
         raise HTTPException(status_code=403, detail="Location does not exist")
 
     # Check if reoccurring schedule already exists
     if schedules.get_reoccurring_schedule(
-        schedule=schedule,
-        db=db,
+        schedule=ScheduleReoccurringSearchClass(**schedule.__dict__), db=db
     ):
         raise HTTPException(status_code=403, detail="Schedule already exists")
-    await validate_schedule(schedule=schedule)
-    return schedules.create_schedule(schedule=schedule, db=db)
+
+    validate_schedule(schedule=schedule)
+
+    return schedules.create_schedule(
+        schedule=schedule, db_academic_user=db_academic_user, db=db
+    )
 
 
 @router.post(
@@ -149,22 +166,27 @@ async def create_reoccuring_schedule(
 async def create_non_reoccuring_schedule(
     schedule: ScheduleNonReoccurringCreateClass, db: Session = Depends(get_db)
 ):
-    academic_user = get_user_by_id(user_id=schedule.academic_user_id, db=db)
+    db_academic_user = get_user_by_id(user_id=schedule.academic_user_id, db=db)
 
-    if not academic_user or academic_user.is_admin:
-        raise HTTPException(status_code=403, detail="Academic user does not exist")
+    if not db_academic_user or db_academic_user.is_admin:
+        raise HTTPException(
+            status_code=403, detail="Academic user does not exist"
+        )
 
     if not get_location_by_id(location_id=schedule.location_id, db=db):
         raise HTTPException(status_code=403, detail="Location does not exist")
 
     # Check if non-reoccurring schedule already exists
     if schedules.get_non_reoccurring_schedule(
-        schedule=schedule,
+        schedule=ScheduleNonReoccurringSearchClass(**schedule.__dict__),
         db=db,
     ):
         raise HTTPException(status_code=403, detail="Schedule already exists")
-    await validate_schedule(schedule=schedule)
-    return schedules.create_schedule(schedule=schedule, db=db)
+
+    validate_schedule(schedule=schedule)
+    return schedules.create_schedule(
+        schedule=schedule, db_academic_user=db_academic_user, db=db
+    )
 
 
 @router.put(
@@ -180,17 +202,23 @@ async def update_reoccurring_schedule(
         schedule_id=schedule_id,
         db=db,
     )
+
     if db_schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
+
     if not db_schedule.is_reoccurring:
         raise HTTPException(
             status_code=403,
-            detail="Schedule you are trying update is not of type reoccurring",
+            detail="Schedule you are trying to update is not reoccurring",
         )
+
     # TODO
     # You also need to perform check if schedule exists validations here
-    await validate_schedule(schedule=schedule)
-    return schedules.update_schedule(schedule=schedule, db_schedule=db_schedule, db=db)
+    validate_schedule(schedule=schedule)
+
+    return schedules.update_schedule(
+        schedule=schedule, db_schedule=db_schedule, db=db
+    )
 
 
 @router.put(
@@ -206,17 +234,23 @@ async def update_non_reoccurring_schedule(
         schedule_id=schedule_id,
         db=db,
     )
+
     if db_schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
+
     if db_schedule.is_reoccurring:
         raise HTTPException(
             status_code=403,
-            detail="Schedule you are trying update is not of type non-reoccurring",
+            detail="Schedule you are trying update is not non-reoccurring",
         )
+
     # TODO
     # You also need to perform check if schedule exists validations here
-    await validate_schedule(schedule=schedule)
-    return schedules.update_schedule(schedule=schedule, db_schedule=db_schedule, db=db)
+    validate_schedule(schedule=schedule)
+
+    return schedules.update_schedule(
+        schedule=schedule, db_schedule=db_schedule, db=db
+    )
 
 
 @router.delete(
@@ -225,6 +259,8 @@ async def update_non_reoccurring_schedule(
 )
 async def delete_schedule(schedule_id: int, db: Session = Depends(get_db)):
     db_schedule = schedules.get_schedule_by_id(schedule_id=schedule_id, db=db)
+
     if db_schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
+
     return schedules.delete_schedule(db_schedule=db_schedule, db=db)

@@ -28,7 +28,9 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, secret.SECRET_KEY, algorithms=[secret.ALGORITHM])
+        payload = jwt.decode(
+            token, secret.SECRET_KEY, algorithms=[secret.ALGORITHM]
+        )
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -41,23 +43,23 @@ async def get_current_user(
     return user
 
 
-async def user_should_be_admin(
+async def should_be_admin_user(
     current_user: Annotated[UserModel, Depends(get_current_user)],
 ):
     if current_user.is_admin:
         return current_user
     raise HTTPException(
-        status_code=400,
+        status_code=status.HTTP_403_FORBIDDEN,
         detail="You do not have the necessary permission to access this route",
     )
 
 
-async def user_should_be_teacher(
+async def should_be_academic_user(
     current_user: Annotated[UserModel, Depends(get_current_user)],
 ):
     if not current_user.is_admin:
         return current_user
     raise HTTPException(
-        status_code=400,
-        detail="This route is for teachers only",
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="This route is for academic users only",
     )

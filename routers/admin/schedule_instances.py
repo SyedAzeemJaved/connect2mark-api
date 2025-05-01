@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 from fastapi import Depends, HTTPException, APIRouter
 
@@ -18,14 +18,14 @@ from sqlite.schemas import (
     CommonResponseClass,
 )
 
-from utils.auth import user_should_be_admin
+from utils.auth import should_be_admin_user
 from utils.responses import common_responses
 
 router = APIRouter(
     prefix="/schedule-instances",
     tags=["admin - schedule instances or classes"],
     dependencies=[
-        Depends(user_should_be_admin),
+        Depends(should_be_admin_user),
     ],
     responses=common_responses(),
 )
@@ -34,7 +34,7 @@ router = APIRouter(
 async def should_schedule_instance_be_edited_or_deleted(
     schedule_instance: ScheduleInstance, db: Session
 ):
-    now = datetime.utcnow()
+    now = datetime.now(tz=timezone.utc)
     schedule_instance_dto = datetime(
         year=schedule_instance.date.year,
         month=schedule_instance.date.month,
@@ -68,7 +68,9 @@ async def get_all_schedule_instancess(db: Session = Depends(get_db)):
 
 
 @router.get("/date/{date}", response_model=Page[ScheduleInstance])
-async def get_all_schedule_instances_by_date(date: date, db: Session = Depends(get_db)):
+async def get_all_schedule_instances_by_date(
+    date: date, db: Session = Depends(get_db)
+):
     return paginate(
         schedule_instances.get_all_schedule_instances_by_date(date=date, db=db)
     )
@@ -95,7 +97,9 @@ async def get_all_schedule_instances_for_academic_users_for_today(
     if not db_user:
         raise HTTPException(status_code=403, detail="User not found")
     if db_user.is_admin:
-        raise HTTPException(status_code=403, detail="User is not an academic member")
+        raise HTTPException(
+            status_code=403, detail="User is not an academic member"
+        )
     return paginate(
         schedule_instances.get_today_schedule_instances_by_user_id(
             user_id=db_user.id, db=db
@@ -111,7 +115,9 @@ async def get_schedule_instance_by_id(
         schedule_instance_id=schedule_instance_id, db=db
     )
     if db_schedule_instance is None:
-        raise HTTPException(status_code=404, detail="Schedule instance not found")
+        raise HTTPException(
+            status_code=404, detail="Schedule instance not found"
+        )
     return db_schedule_instance
 
 
@@ -129,7 +135,9 @@ async def update_schedule_instance(
         db=db,
     )
     if db_schedule_instance is None:
-        raise HTTPException(status_code=404, detail="Schedule instance not found")
+        raise HTTPException(
+            status_code=404, detail="Schedule instance not found"
+        )
 
     new_academic_user = get_user_by_id(
         user_id=schedule_instance.academic_user_id, db=db
@@ -139,7 +147,9 @@ async def update_schedule_instance(
         raise HTTPException(status_code=404, detail="User not found")
 
     if new_academic_user.is_admin:
-        raise HTTPException(status_code=403, detail="User should be an academic member")
+        raise HTTPException(
+            status_code=403, detail="User should be an academic member"
+        )
 
     if not get_location_by_id(location_id=schedule_instance.location_id, db=db):
         raise HTTPException(status_code=404, detail="Location not found")
@@ -166,7 +176,9 @@ async def delete_schedule_instance(
         schedule_instance_id=schedule_instance_id, db=db
     )
     if db_schedule_instance is None:
-        raise HTTPException(status_code=404, detail="Schedule instance not found")
+        raise HTTPException(
+            status_code=404, detail="Schedule instance not found"
+        )
     await should_schedule_instance_be_edited_or_deleted(
         schedule_instance=db_schedule_instance, db=db
     )

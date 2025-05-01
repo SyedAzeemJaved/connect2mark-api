@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time, timedelta, timezone
 
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
@@ -170,7 +170,7 @@ class ScheduleCreateBaseClass(ScheduleBaseClass):
 
 
 class ScheduleReoccurringCreateClass(ScheduleCreateBaseClass):
-    day: DaysEnum = return_day_of_week_name(date=datetime.utcnow())
+    day: DaysEnum = return_day_of_week_name(date=datetime.now(tz=timezone.utc))
 
 
 class ScheduleNonReoccurringCreateClass(ScheduleCreateBaseClass):
@@ -182,7 +182,7 @@ class ScheduleUpdateBaseClass(ScheduleBaseClass):
 
 
 class ScheduleReoccurringUpdateClass(ScheduleUpdateBaseClass):
-    day: DaysEnum = return_day_of_week_name(date=datetime.utcnow())
+    day: DaysEnum = return_day_of_week_name(date=datetime.now(tz=timezone.utc))
 
 
 class ScheduleNonReoccurringUpdateClass(ScheduleUpdateBaseClass):
@@ -198,7 +198,6 @@ class Schedule(ScheduleBaseClass):
     id: int
     is_reoccurring: bool
 
-    academic_user: User
     location: Location
 
     date: date | None
@@ -212,18 +211,18 @@ class Schedule(ScheduleBaseClass):
 
 
 # Schedule Search
-class ScheduleSearchClass(BaseModel):
+class ScheduleSearchBaseClass(BaseModel):
     academic_user_id: int
     location_id: int
     start_time_in_utc: time = get_current_time_in_str_iso_8601()
     end_time_in_utc: time = get_current_time_in_str_iso_8601(is_end_time=True)
 
 
-class ScheduleReoccurringSearchClass(ScheduleSearchClass):
-    day: DaysEnum = return_day_of_week_name(date=datetime.utcnow())
+class ScheduleReoccurringSearchClass(ScheduleSearchBaseClass):
+    day: DaysEnum = return_day_of_week_name(date=datetime.now(tz=timezone.utc))
 
 
-class ScheduleNonReoccurringSearchClass(ScheduleSearchClass):
+class ScheduleNonReoccurringSearchClass(ScheduleSearchBaseClass):
     date: date
 
 
@@ -251,7 +250,6 @@ class ScheduleInstance(ScheduleInstanceBaseClass):
 
     schedule: Schedule
 
-    academic_user: User
     location: Location
 
     created_at_in_utc: datetime = (
@@ -305,10 +303,10 @@ class AttendanceResult(AttendanceBaseClass):
 # Attendance Search
 class AttendanceSearchClass(AttendanceBaseClass):
     start_date: date = datetime.strftime(
-        datetime.utcnow() - timedelta(days=15),
+        datetime.now(tz=timezone.utc) - timedelta(days=15),
         time_constants.DATE_TIME_FORMAT,
     )
-    end_date: date = datetime.utcnow().date()
+    end_date: date = datetime.now(tz=timezone.utc).date()
 
 
 # Stats

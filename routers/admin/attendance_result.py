@@ -14,14 +14,14 @@ from sqlite.crud.schedule_instances import (
 
 from sqlite.schemas import AttendanceResult, AttendanceSearchClass
 
-from utils.auth import user_should_be_admin
+from utils.auth import should_be_admin_user
 from utils.responses import common_responses
 
 router = APIRouter(
     prefix="/attendance-result",
     tags=["admin - attendance-result"],
     dependencies=[
-        Depends(user_should_be_admin),
+        Depends(should_be_admin_user),
     ],
     responses=common_responses(),
 )
@@ -40,7 +40,9 @@ async def get_attendance_for_duration(
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     if db_user.is_admin:
-        raise HTTPException(status_code=403, detail="User is not an academic user")
+        raise HTTPException(
+            status_code=403, detail="User is not an academic user"
+        )
     schedule_instances = get_all_schedule_instance_by_date_range_and_user_id(
         start_date=data.start_date,
         end_date=data.end_date,

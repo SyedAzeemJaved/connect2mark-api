@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
@@ -34,7 +34,7 @@ def get_all_schedule_instance_by_date_range_and_user_id(
 
 def get_today_schedule_instances(db: Session):
     """Get all schedule instances for the current date (today) from the database"""
-    now = datetime.utcnow()
+    now = datetime.now(tz=timezone.utc)
     return db.query(models.ScheduleInstanceModel).filter(
         models.ScheduleInstanceModel.date == now.date()
     )
@@ -42,7 +42,7 @@ def get_today_schedule_instances(db: Session):
 
 def get_today_schedule_instances_by_user_id(user_id: int, db: Session):
     """Get all schedule instances for the current date (today) by user id from the database"""
-    now = datetime.utcnow()
+    now = datetime.now(tz=timezone.utc)
     return db.query(models.ScheduleInstanceModel).filter(
         and_(
             models.ScheduleInstanceModel.academic_user_id == user_id,
@@ -66,10 +66,12 @@ def get_exact_schedule_instance(
         .filter(
             and_(
                 models.ScheduleInstanceModel.schedule_id == schedule_id,
-                models.ScheduleInstanceModel.academic_user_id == academic_user_id,
+                models.ScheduleInstanceModel.academic_user_id
+                == academic_user_id,
                 models.ScheduleInstanceModel.location_id == location_id,
                 models.ScheduleInstanceModel.date == date,
-                models.ScheduleInstanceModel.start_time_in_utc == start_time_in_utc,
+                models.ScheduleInstanceModel.start_time_in_utc
+                == start_time_in_utc,
                 models.ScheduleInstanceModel.end_time_in_utc == end_time_in_utc,
             )
         )

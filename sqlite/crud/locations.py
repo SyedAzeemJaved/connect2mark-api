@@ -10,7 +10,7 @@ def get_all_locations(db: Session):
     return db.query(models.LocationModel)
 
 
-def get_location_by_id(location_id: str, db: Session):
+def get_location_by_id(location_id: int, db: Session):
     """Get a single location by id from the database"""
     return (
         db.query(models.LocationModel)
