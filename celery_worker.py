@@ -1,7 +1,7 @@
 from celery import Celery
 from celery import schedules
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlite.database import get_db
 
@@ -26,7 +26,7 @@ def create_schedule_instances_or_classes() -> None:
     db = next(db_generator)
     try:
         today_schedules = schedules.get_today_schedules(db=db)
-        now = datetime.utcnow()
+        now = datetime.now(tz=timezone.utc)
 
         should_commit = False
         for schedule in today_schedules:

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session, joinedload
 
@@ -17,7 +17,7 @@ def get_all_admin_users(db: Session):
     """Get all admin users from the database"""
     return (
         db.query(models.UserModel)
-        .filter(models.UserModel.is_admin == True)
+        .filter(models.UserModel.is_admin.is_(True))
         .options(joinedload(models.UserModel.additional_details))
     )
 
@@ -89,7 +89,7 @@ def update_user(user: UserUpdateClass, db_user: models.UserModel, db: Session):
         db_user.additional_details.update(user)
     # Need to manually update updated_at_in_utc
     # Else if only UserAdditionalDetailModel model is updated, updated_at_in_utc will not trigger
-    db_user.updated_at_in_utc = datetime.utcnow()
+    db_user.updated_at_in_utc = datetime.now(tz=timezone.utc)
     db.commit()
 
     return db_user
@@ -101,7 +101,9 @@ def update_user_password(
     db: Session,
 ):
     """Update a user's password on the database"""
-    new_password.new_password = get_password_hash(password=new_password.new_password)
+    new_password.new_password = get_password_hash(
+        password=new_password.new_password
+    )
     db_user.update_password(new_password=new_password.new_password)
     db.commit()
 

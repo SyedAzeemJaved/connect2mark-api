@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 
 from sqlite.enums import DaysEnum
 
@@ -33,14 +33,20 @@ def convert_datetime_to_iso_8601_with_z_suffix(dt: datetime) -> str:
 
 def get_current_datetime_in_str_iso_8601_with_z_suffix() -> str:
     """Get current datetime in ISO 8601 format with the Z suffix"""
-    return datetime.utcnow().strftime(time_constants.CREATED_AND_UPDATED_AT_FORMAT)
+    return datetime.now(tz=timezone.utc).strftime(
+        time_constants.CREATED_AND_UPDATED_AT_FORMAT
+    )
 
 
 def get_current_time_in_str_iso_8601(is_end_time: bool = False) -> str:
     """Get current time in ISO 8601 format (HH:MM:SS)"""
     if is_end_time:
         return datetime.strftime(
-            datetime.utcnow() + timedelta(hours=1),
+            datetime.now(tz=timezone.utc) + timedelta(hours=1),
             time_constants.START_AND_END_TIME_FORMAT,
         )
-    return datetime.utcnow().time().strftime(time_constants.START_AND_END_TIME_FORMAT)
+    return (
+        datetime.now(tz=timezone.utc)
+        .time()
+        .strftime(time_constants.START_AND_END_TIME_FORMAT)
+    )

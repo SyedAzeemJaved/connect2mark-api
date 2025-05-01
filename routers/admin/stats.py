@@ -8,14 +8,14 @@ import sqlite.crud.stats as crud
 from sqlite.schemas import (
     StatsBaseClass,
 )
-from utils.auth import user_should_be_admin
+from utils.auth import should_be_admin_user
 from utils.responses import common_responses
 
 router = APIRouter(
     prefix="/stats",
     tags=["admin - stats"],
     dependencies=[
-        Depends(user_should_be_admin),
+        Depends(should_be_admin_user),
     ],
     responses=common_responses(),
 )

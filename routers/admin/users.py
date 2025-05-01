@@ -19,14 +19,14 @@ from sqlite.schemas import (
 )
 
 from utils.common import are_object_to_edit_and_other_object_same
-from utils.auth import user_should_be_admin
+from utils.auth import should_be_admin_user
 from utils.responses import common_responses
 
 router = APIRouter(
     prefix="/users",
     tags=["admin - users"],
     dependencies=[
-        # Depends(user_should_be_admin),
+        Depends(should_be_admin_user),
     ],
     responses=common_responses(),
 )
@@ -42,7 +42,9 @@ async def get_all_academic_users(
     only_students: Literal["yes", "no"], db: Session = Depends(get_db)
 ):
     return paginate(
-        users.get_all_academic_users(only_students=(only_students == "yes"), db=db)
+        users.get_all_academic_users(
+            only_students=(only_students == "yes"), db=db
+        )
     )
 
 
@@ -132,7 +134,9 @@ async def update_user_password(
     db_user = users.get_user_by_id(user_id=user_id, db=db)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return users.update_user_password(new_password=new_password, db_user=db_user, db=db)
+    return users.update_user_password(
+        new_password=new_password, db_user=db_user, db=db
+    )
 
 
 @router.delete(

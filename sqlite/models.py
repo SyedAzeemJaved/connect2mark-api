@@ -1,19 +1,11 @@
-from datetime import datetime
+from typing import Optional, get_args
 
-from sqlalchemy import (
-    Column,
-    Boolean,
-    Integer,
-    String,
-    Time,
-    Date,
-    DateTime,
-    ForeignKey,
-    Enum,
-    UniqueConstraint,
-)
+from datetime import datetime, time, timezone
+from datetime import date as dtdate
 
-from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey, Enum, UniqueConstraint
+
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from sqlite.database import Base, engine
 
@@ -34,15 +26,32 @@ from sqlite.enums import (
 Base.metadata.create_all(bind=engine)
 
 
-class UserModel(Base):
+class TimestampCreateOnlyBaseModel(Base):
+    __abstract__ = True
+
+    created_at_in_utc: Mapped[Optional[datetime]] = mapped_column(
+        default=datetime.now(tz=timezone.utc)
+    )
+
+
+class TimestampBaseModel(TimestampCreateOnlyBaseModel):
+    __abstract__ = True
+
+    updated_at_in_utc: Mapped[Optional[datetime]] = mapped_column(
+        onupdate=datetime.now(tz=timezone.utc),
+    )
+
+
+class UserModel(TimestampBaseModel):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    full_name = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False)
-    is_admin = Column(Boolean, nullable=False, default=False)
-    is_student = Column(Boolean, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    full_name: Mapped[str]
+    email: Mapped[str] = mapped_column(unique=True)
+    password: Mapped[str]
+    is_admin: Mapped[bool] = mapped_column(default=False)
+    is_student: Mapped[bool] = mapped_column(default=False)
 
     # Define the one-to-one relationship with UserAdditionalDetailModel
     additional_details = relationship(
@@ -50,19 +59,12 @@ class UserModel(Base):
         uselist=False,
         primaryjoin="UserModel.id == UserAdditionalDetailModel.user_id",
         cascade="all, delete-orphan",
-        # This will delete associated additional_details when a user is deleted
+        # Will delete associated additional_details when a user is deleted
     )
 
     schedules = relationship("ScheduleModel", secondary="schedule_users")
     schedule_instances = relationship(
         "ScheduleInstanceModel", secondary="schedule_instance_users"
-    )
-
-    created_at_in_utc = Column(
-        DateTime(timezone=False), nullable=True, default=datetime.utcnow
-    )
-    updated_at_in_utc = Column(
-        DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
     )
 
     def update(self, user: UserUpdateClass, **kwargs):
@@ -76,43 +78,46 @@ class UserModel(Base):
 class UserAdditionalDetailModel(Base):
     __tablename__ = "user_additional_details"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(
-        Integer, ForeignKey("users.id"), unique=True, nullable=False
-    )
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    phone = Column(String, unique=True, nullable=True, default=None)
-    department = Column(
-        Enum(DepartmentsEnum),
-        nullable=True,
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+
+    phone: Mapped[Optional[str]] = mapped_column(unique=True, default=None)
+
+    department: Mapped[DepartmentsEnum] = mapped_column(
+        Enum(
+            *get_args(DepartmentsEnum),
+            name="department",
+            create_constraint=True,
+            validate_strings=True,
+        ),
         default=DepartmentsEnum.NOT_SPECIFIED,
     )
-    designation = Column(
-        Enum(DesignationsEnum),
-        nullable=True,
+    designation: Mapped[DesignationsEnum] = mapped_column(
+        Enum(
+            *get_args(DesignationsEnum),
+            name="designation",
+            create_constraint=True,
+            validate_strings=True,
+        ),
         default=DesignationsEnum.NOT_SPECIFIED,
     )
 
     def update(self, user: UserUpdateClass, **kwargs):
-        self.phone = user.additional_details.phone
-        self.department = user.additional_details.department
-        self.designation = user.additional_details.designation
+        if user.additional_details:
+            self.phone = user.additional_details.phone
+            self.department = user.additional_details.department
+            self.designation = user.additional_details.designation
 
 
-class LocationModel(Base):
+class LocationModel(TimestampBaseModel):
     __tablename__ = "locations"
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, unique=True, nullable=False)
-    bluetooth_address = Column(String, unique=True, nullable=False)
-    coordinates = Column(String, unique=True, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    created_at_in_utc = Column(
-        DateTime(timezone=False), nullable=True, default=datetime.utcnow
-    )
-    updated_at_in_utc = Column(
-        DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
-    )
+    title: Mapped[str] = mapped_column(unique=True)
+    bluetooth_address: Mapped[str] = mapped_column(unique=True)
+    coordinates: Mapped[str] = mapped_column(unique=True)
 
     def update(self, location: LocationCreateOrUpdateClass, **kwargs):
         self.title = location.title
@@ -125,37 +130,24 @@ class LocationModel(Base):
 class ScheduleUserModel(Base):
     __tablename__ = "schedule_users"
 
-    user_id = Column(
-        Integer, ForeignKey("users.id"), primary_key=True, nullable=False
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), primary_key=True
     )
-    schedule_id = Column(
-        Integer, ForeignKey("schedules.id"), primary_key=True, nullable=False
+    schedule_id: Mapped[int] = mapped_column(
+        ForeignKey("schedules.id"), primary_key=True
     )
 
 
-class ScheduleModel(Base):
+class ScheduleModel(TimestampBaseModel):
     __tablename__ = "schedules"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    # academic_user_id = Column(
-    #     Integer,
-    #     ForeignKey("users.id"),
-    #     unique=False,
-    #     nullable=False,
-    # )
-    # # Define the one-to-one relationship with UserModel
-    # academic_user = relationship(
-    #     "UserModel",
-    #     uselist=False,
-    #     primaryjoin="ScheduleModel.academic_user_id == UserModel.id",
-    # )
-    ##
-    # check back populates and cascade
+    # Check back populates and cascade
     academic_users = relationship("UserModel", secondary="schedule_users")
 
-    location_id = Column(
-        Integer, ForeignKey("locations.id"), unique=False, nullable=False
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id"), unique=False
     )
     # Define the one-to-one relationship with LocationModel
     location = relationship(
@@ -165,20 +157,23 @@ class ScheduleModel(Base):
         cascade="none",
     )
 
-    title = Column(String, nullable=False)
-    is_reoccurring = Column(Boolean, default=True)
-    # Date will be null for reoccurring classes
-    date = Column(Date, nullable=True)
-    day = Column(Enum(DaysEnum), nullable=False)
-    start_time_in_utc = Column(Time, nullable=False)
-    end_time_in_utc = Column(Time, nullable=False)
+    title: Mapped[str]
 
-    created_at_in_utc = Column(
-        DateTime(timezone=False), nullable=True, default=datetime.utcnow
+    is_reoccurring: Mapped[bool] = mapped_column(default=True)
+
+    # Date will be null for reoccurring classes
+    date: Mapped[Optional[dtdate]] = mapped_column(default=False)
+    day: Mapped[DaysEnum] = mapped_column(
+        Enum(
+            *get_args(DaysEnum),
+            name="day",
+            create_constraint=True,
+            validate_strings=True,
+        ),
     )
-    updated_at_in_utc = Column(
-        DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
-    )
+
+    start_time_in_utc: Mapped[time]
+    end_time_in_utc: Mapped[time]
 
     def update_reoccurring(
         self, schedule: ScheduleReoccurringUpdateClass, **kwargs
@@ -203,41 +198,28 @@ class ScheduleModel(Base):
 class ScheduleInstanceUserModel(Base):
     __tablename__ = "schedule_instance_users"
 
-    user_id = Column(
-        Integer, ForeignKey("users.id"), primary_key=True, nullable=False
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), primary_key=True
     )
-    schedule_instance_id = Column(
-        Integer,
+    schedule_instance_id: Mapped[int] = mapped_column(
         ForeignKey("schedule_instances.id"),
         primary_key=True,
-        nullable=False,
     )
 
 
 # ScheduleInstance (Class)
-class ScheduleInstanceModel(Base):
+class ScheduleInstanceModel(TimestampBaseModel):
     __tablename__ = "schedule_instances"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    # academic_user_id = Column(
-    #     Integer, ForeignKey("users.id"), unique=False, nullable=False
-    # )
-    # # Define the one-to-one relationship with UserModel
-    # academic_user = relationship(
-    #     "UserModel",
-    #     uselist=False,
-    #     primaryjoin="ScheduleInstanceModel.academic_user_id == UserModel.id",
-    #     cascade="none",
-    # )
-    ##
-    # check back populates and cascade
+    # Check back populates and cascade
     academic_users = relationship(
         "UserModel", secondary="schedule_instance_users"
     )
 
-    location_id = Column(
-        Integer, ForeignKey("locations.id"), unique=False, nullable=False
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("locations.id"), unique=False
     )
     # Define the one-to-one relationship with LocationModel
     location = relationship(
@@ -247,11 +229,9 @@ class ScheduleInstanceModel(Base):
         cascade="none",
     )
 
-    schedule_id = Column(
-        Integer,
+    schedule_id: Mapped[int] = mapped_column(
         ForeignKey("schedules.id", ondelete="CASCADE"),
         unique=False,
-        nullable=False,
     )
     # Define the one-to-one relationship with ScheduleModel
     schedule = relationship(
@@ -261,24 +241,17 @@ class ScheduleInstanceModel(Base):
         cascade="none",
     )
 
-    date = Column(Date, nullable=False)
-    start_time_in_utc = Column(Time, nullable=False)
-    end_time_in_utc = Column(Time, nullable=False)
+    date: Mapped[dtdate]
 
-    created_at_in_utc = Column(
-        DateTime(timezone=False), nullable=True, default=datetime.utcnow
-    )
-    updated_at_in_utc = Column(
-        DateTime(timezone=False), nullable=True, onupdate=datetime.utcnow
-    )
+    start_time_in_utc: Mapped[time]
+    end_time_in_utc: Mapped[time]
 
-    # def update(self, schedule_instance: ScheduleInstanceUpdateClass,
-    #  **kwargs):
-    #     self.academic_user_id = schedule_instance.academic_user_id
-    #     self.location_id = schedule_instance.location_id
+    def update(self, schedule_instance: ScheduleInstanceUpdateClass, **kwargs):
+        self.academic_user_id = schedule_instance.academic_user_id
+        self.location_id = schedule_instance.location_id
 
 
-class AttendanceModel(Base):
+class AttendanceModel(TimestampCreateOnlyBaseModel):
     __tablename__ = "attendances"
     __table_args__ = (
         UniqueConstraint(
@@ -288,13 +261,11 @@ class AttendanceModel(Base):
         ),
     )
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    user_id = Column(
-        Integer,
+    user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
         unique=False,
-        nullable=False,
     )
     # Define the one-to-one relationship with UserModel
     user = relationship(
@@ -303,11 +274,9 @@ class AttendanceModel(Base):
         primaryjoin="AttendanceModel.user_id == UserModel.id",
     )
 
-    schedule_instance_id = Column(
-        Integer,
+    schedule_instance_id: Mapped[int] = mapped_column(
         ForeignKey("schedule_instances.id", ondelete="CASCADE"),
         unique=True,
-        nullable=False,
     )
     # Define the one-to-one relationship with ScheduleInstanceModel
     schedule_instance = relationship(
@@ -317,8 +286,11 @@ class AttendanceModel(Base):
         cascade="none",
     )
 
-    attendance_status = Column(Enum(AttendanceEnum), nullable=False)
-
-    created_at_in_utc = Column(
-        DateTime(timezone=False), nullable=False, default=datetime.utcnow
+    attendance_status: Mapped[AttendanceEnum] = mapped_column(
+        Enum(
+            *get_args(AttendanceEnum),
+            name="attendance_status",
+            create_constraint=True,
+            validate_strings=True,
+        ),
     )

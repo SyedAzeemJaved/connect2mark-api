@@ -16,14 +16,14 @@ from sqlite.schemas import (
     CommonResponseClass,
 )
 
-from utils.auth import get_current_user, user_should_be_teacher
+from utils.auth import get_current_user, should_be_academic_user
 from utils.responses import common_responses
 
 router = APIRouter(
     prefix="/academic/schedule-instances",
     tags=["academic - schedule instances or classes"],
     dependencies=[
-        Depends(user_should_be_teacher),
+        Depends(should_be_academic_user),
     ],
     responses=common_responses(),
 )
