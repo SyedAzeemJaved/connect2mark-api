@@ -21,6 +21,9 @@ passlib = {version = "^1.7.4", extras = ["bcrypt"]}
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 uvicorn = "^0.34.2"
+types-python-jose = "^3.4.0.20250224"
+
+[tool.mypy]
 
 [build-system]
 requires = ["poetry-core"]
