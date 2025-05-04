@@ -27,7 +27,7 @@ def get_all_academic_users(only_students: bool, db: Session):
     return (
         db.query(models.UserModel)
         .filter(
-            models.UserModel.is_admin == False,
+            models.UserModel.is_admin.is_(False),
             models.UserModel.is_student == only_students,
         )
         .options(joinedload(models.UserModel.additional_details))
@@ -66,7 +66,10 @@ def get_user_by_phone(user_phone: str, db: Session):
 
 
 def create_user(user: UserCreateClass, db: Session):
-    """Create a new user, with or without it's additional details in the database"""
+    (
+        """Create a new user, with or without it's additional details in"""
+        + """the database"""
+    )
     user.password = get_password_hash(user.password)
     db_user = models.UserModel(**user.__dict__)
 
@@ -88,7 +91,8 @@ def update_user(user: UserUpdateClass, db_user: models.UserModel, db: Session):
     if db_user.additional_details:
         db_user.additional_details.update(user)
     # Need to manually update updated_at_in_utc
-    # Else if only UserAdditionalDetailModel model is updated, updated_at_in_utc will not trigger
+    # Else if only UserAdditionalDetailModel model is updated,
+    #  updated_at_in_utc will not trigger
     db_user.updated_at_in_utc = datetime.now(tz=timezone.utc)
     db.commit()
 
@@ -112,7 +116,6 @@ def update_user_password(
 
 def delete_user(db_user: models.UserModel, db: Session):
     """Delete a user from the database"""
-    # Cascade will handle delete from PatientModel, CaretakerModel or DoctorModel
     db.delete(db_user)
     # UserAssociationDetails is on cascade, it will be deleted automatically
     db.commit()

@@ -22,7 +22,10 @@ def get_all_schedule_instances_by_date(date: date, db: Session):
 def get_all_schedule_instance_by_date_range_and_user_id(
     start_date: date, end_date: date, user_id: int, db: Session
 ):
-    """Get all schedule instances for a given date range by user id from the database"""
+    (
+        """Get all schedule instances for a given date range by user id from """
+        + """the database"""
+    )
     return db.query(models.ScheduleInstanceModel).filter(
         and_(
             models.ScheduleInstanceModel.date >= start_date,
@@ -33,7 +36,10 @@ def get_all_schedule_instance_by_date_range_and_user_id(
 
 
 def get_today_schedule_instances(db: Session):
-    """Get all schedule instances for the current date (today) from the database"""
+    (
+        """Get all schedule instances for the current date (today) from """
+        + """the database"""
+    )
     now = datetime.now(tz=timezone.utc)
     return db.query(models.ScheduleInstanceModel).filter(
         models.ScheduleInstanceModel.date == now.date()
@@ -41,7 +47,10 @@ def get_today_schedule_instances(db: Session):
 
 
 def get_today_schedule_instances_by_user_id(user_id: int, db: Session):
-    """Get all schedule instances for the current date (today) by user id from the database"""
+    (
+        """Get all schedule instances for the current date (today) by user """
+        + """id from the database"""
+    )
     now = datetime.now(tz=timezone.utc)
     return db.query(models.ScheduleInstanceModel).filter(
         and_(

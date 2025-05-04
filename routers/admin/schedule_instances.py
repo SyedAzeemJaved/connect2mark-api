@@ -49,7 +49,8 @@ async def should_schedule_instance_be_edited_or_deleted(
             status_code=403,
             detail="You can not edit or delete a class after it has started",
         )
-    # No need to check for attendance, as we can only mark attendance after a class has started
+    # No need to check for attendance, as we can only
+    # mark attendance after a class has started
     # One a class has started, we can not delete it regardless
 
     # Check if no attendance has been marked
@@ -58,7 +59,8 @@ async def should_schedule_instance_be_edited_or_deleted(
     # ):
     #     raise HTTPException(
     #         status_code=403,
-    #         detail="You can not edit or delete a class whose attendance has been marked",
+    #         detail="You can not edit or delete a class whose attendance
+    #  has been marked",
     #     )
 
 
@@ -87,7 +89,8 @@ async def get_all_schedule_instances_for_today(db: Session = Depends(get_db)):
 
 @router.get(
     "/today/{academic_user_id}",
-    summary="Get All Schedules Instances For An Academic User For Today (Current Date)",
+    summary="Get All Schedules Instances For An Academic User "
+    + "For Today (Current Date)",
     response_model=Page[ScheduleInstance],
 )
 async def get_all_schedule_instances_for_academic_users_for_today(
