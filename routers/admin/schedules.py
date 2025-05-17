@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from sqlite.crud import schedules
@@ -73,18 +73,20 @@ def validate_schedule(
 
 
 @router.get("", response_model=Page[Schedule])
-async def get_all_schedules(db: Session = Depends(get_db)):
+async def get_all_schedules(db: Session = Depends(get_db_session)):
     return paginate(schedules.get_all_schedules(db=db))
 
 
 @router.get("/date/{date}", response_model=Page[Schedule])
-async def get_all_schedules_by_date(date: date, db: Session = Depends(get_db)):
+async def get_all_schedules_by_date(
+    date: date, db: Session = Depends(get_db_session)
+):
     return paginate(schedules.get_all_schedules_by_date(date=date, db=db))
 
 
 @router.get("/day/{day}", response_model=Page[Schedule])
 async def get_all_schedules_by_day(
-    day: DaysEnum, db: Session = Depends(get_db)
+    day: DaysEnum, db: Session = Depends(get_db_session)
 ):
     return paginate(schedules.get_all_schedules_by_day(day=day, db=db))
 
@@ -95,14 +97,14 @@ async def get_all_schedules_by_day(
     response_model=Page[Schedule],
 )
 async def get_all_schedules_for_today(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     return paginate(schedules.get_today_schedules(db=db))
 
 
 @router.get("/academic/{academic_user_id}", response_model=Page[Schedule])
 async def get_all_schedules_for_academic_users(
-    academic_user_id: int, db: Session = Depends(get_db)
+    academic_user_id: int, db: Session = Depends(get_db_session)
 ):
     db_user = get_user_by_id(user_id=academic_user_id, db=db)
 
@@ -120,7 +122,9 @@ async def get_all_schedules_for_academic_users(
 
 
 @router.get("/{schedule_id}", response_model=Schedule)
-async def get_schedule_by_id(schedule_id: int, db: Session = Depends(get_db)):
+async def get_schedule_by_id(
+    schedule_id: int, db: Session = Depends(get_db_session)
+):
     db_schedule = schedules.get_schedule_by_id(schedule_id=schedule_id, db=db)
 
     if db_schedule is None:
@@ -134,7 +138,8 @@ async def get_schedule_by_id(schedule_id: int, db: Session = Depends(get_db)):
     response_model=Schedule,
 )
 async def create_reoccuring_schedule(
-    schedule: ScheduleReoccurringCreateClass, db: Session = Depends(get_db)
+    schedule: ScheduleReoccurringCreateClass,
+    db: Session = Depends(get_db_session),
 ):
     db_academic_user = get_user_by_id(user_id=schedule.academic_user_id, db=db)
 
@@ -164,7 +169,8 @@ async def create_reoccuring_schedule(
     response_model=Schedule,
 )
 async def create_non_reoccuring_schedule(
-    schedule: ScheduleNonReoccurringCreateClass, db: Session = Depends(get_db)
+    schedule: ScheduleNonReoccurringCreateClass,
+    db: Session = Depends(get_db_session),
 ):
     db_academic_user = get_user_by_id(user_id=schedule.academic_user_id, db=db)
 
@@ -196,7 +202,7 @@ async def create_non_reoccuring_schedule(
 async def update_reoccurring_schedule(
     schedule_id: int,
     schedule: ScheduleReoccurringUpdateClass,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     db_schedule = schedules.get_schedule_by_id(
         schedule_id=schedule_id,
@@ -228,7 +234,7 @@ async def update_reoccurring_schedule(
 async def update_non_reoccurring_schedule(
     schedule_id: int,
     schedule: ScheduleNonReoccurringUpdateClass,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     db_schedule = schedules.get_schedule_by_id(
         schedule_id=schedule_id,
@@ -257,7 +263,9 @@ async def update_non_reoccurring_schedule(
     "/{schedule_id}",
     response_model=CommonResponseClass,
 )
-async def delete_schedule(schedule_id: int, db: Session = Depends(get_db)):
+async def delete_schedule(
+    schedule_id: int, db: Session = Depends(get_db_session)
+):
     db_schedule = schedules.get_schedule_by_id(schedule_id=schedule_id, db=db)
 
     if db_schedule is None:

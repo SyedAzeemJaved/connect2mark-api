@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from sqlite.crud import schedule_instances
@@ -65,13 +65,13 @@ async def should_schedule_instance_be_edited_or_deleted(
 
 
 @router.get("", response_model=Page[ScheduleInstance])
-async def get_all_schedule_instancess(db: Session = Depends(get_db)):
+async def get_all_schedule_instancess(db: Session = Depends(get_db_session)):
     return paginate(schedule_instances.get_all_schedule_instances(db=db))
 
 
 @router.get("/date/{date}", response_model=Page[ScheduleInstance])
 async def get_all_schedule_instances_by_date(
-    date: date, db: Session = Depends(get_db)
+    date: date, db: Session = Depends(get_db_session)
 ):
     return paginate(
         schedule_instances.get_all_schedule_instances_by_date(date=date, db=db)
@@ -83,7 +83,9 @@ async def get_all_schedule_instances_by_date(
     summary="Get All Schedules Instances For Today (Current Date)",
     response_model=Page[ScheduleInstance],
 )
-async def get_all_schedule_instances_for_today(db: Session = Depends(get_db)):
+async def get_all_schedule_instances_for_today(
+    db: Session = Depends(get_db_session),
+):
     return paginate(schedule_instances.get_today_schedule_instances(db=db))
 
 
@@ -94,7 +96,7 @@ async def get_all_schedule_instances_for_today(db: Session = Depends(get_db)):
     response_model=Page[ScheduleInstance],
 )
 async def get_all_schedule_instances_for_academic_users_for_today(
-    academic_user_id: int, db: Session = Depends(get_db)
+    academic_user_id: int, db: Session = Depends(get_db_session)
 ):
     db_user = get_user_by_id(user_id=academic_user_id, db=db)
     if not db_user:
@@ -112,7 +114,7 @@ async def get_all_schedule_instances_for_academic_users_for_today(
 
 @router.get("/{schedule_instance_id}", response_model=ScheduleInstance)
 async def get_schedule_instance_by_id(
-    schedule_instance_id: int, db: Session = Depends(get_db)
+    schedule_instance_id: int, db: Session = Depends(get_db_session)
 ):
     db_schedule_instance = schedule_instances.get_schedule_instance_by_id(
         schedule_instance_id=schedule_instance_id, db=db
@@ -131,7 +133,7 @@ async def get_schedule_instance_by_id(
 async def update_schedule_instance(
     schedule_instance_id: int,
     schedule_instance: ScheduleInstanceUpdateClass,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     db_schedule_instance = schedule_instances.get_schedule_instance_by_id(
         schedule_instance_id=schedule_instance_id,
@@ -173,7 +175,7 @@ async def update_schedule_instance(
     response_model=CommonResponseClass,
 )
 async def delete_schedule_instance(
-    schedule_instance_id: int, db: Session = Depends(get_db)
+    schedule_instance_id: int, db: Session = Depends(get_db_session)
 ):
     db_schedule_instance = schedule_instances.get_schedule_instance_by_id(
         schedule_instance_id=schedule_instance_id, db=db

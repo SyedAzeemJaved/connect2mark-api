@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from sqlite.crud import users
@@ -26,20 +26,20 @@ router = APIRouter(
     prefix="/users",
     tags=["admin - users"],
     dependencies=[
-        Depends(should_be_admin_user),
+        # Depends(should_be_admin_user),
     ],
     responses=common_responses(),
 )
 
 
 @router.get("/admins", response_model=Page[User])
-async def get_all_admins(db: Session = Depends(get_db)):
+async def get_all_admins(db: Session = Depends(get_db_session)):
     return paginate(users.get_all_admin_users(db=db))
 
 
 @router.get("/academic", response_model=Page[User])
 async def get_all_academic_users(
-    only_students: Literal["yes", "no"], db: Session = Depends(get_db)
+    only_students: Literal["yes", "no"], db: Session = Depends(get_db_session)
 ):
     return paginate(
         users.get_all_academic_users(
@@ -49,7 +49,7 @@ async def get_all_academic_users(
 
 
 @router.get("/{user_id}", response_model=User)
-async def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
+async def get_user_by_id(user_id: int, db: Session = Depends(get_db_session)):
     db_user = users.get_user_by_id(user_id=user_id, db=db)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -60,7 +60,9 @@ async def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
     "",
     response_model=User,
 )
-async def create_user(user: UserCreateClass, db: Session = Depends(get_db)):
+async def create_user(
+    user: UserCreateClass, db: Session = Depends(get_db_session)
+):
     db_user = users.get_user_by_email(user_email=user.email, db=db)
 
     if db_user:
@@ -80,7 +82,7 @@ async def create_user(user: UserCreateClass, db: Session = Depends(get_db)):
     response_model=User,
 )
 async def update_user(
-    user_id: int, user: UserUpdateClass, db: Session = Depends(get_db)
+    user_id: int, user: UserUpdateClass, db: Session = Depends(get_db_session)
 ):
     db_user = users.get_user_by_id(user_id=user_id, db=db)
     if db_user is None:
@@ -129,7 +131,7 @@ async def update_user(
 async def update_user_password(
     user_id: int,
     new_password: UserPasswordUpdateClass,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     db_user = users.get_user_by_id(user_id=user_id, db=db)
     if db_user is None:
@@ -143,7 +145,7 @@ async def update_user_password(
     "/{user_id}",
     response_model=CommonResponseClass,
 )
-async def delete_user(user_id: int, db: Session = Depends(get_db)):
+async def delete_user(user_id: int, db: Session = Depends(get_db_session)):
     db_user = users.get_user_by_id(user_id=user_id, db=db)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")

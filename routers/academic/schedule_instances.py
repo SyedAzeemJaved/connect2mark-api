@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from sqlite.crud import schedule_instances
@@ -36,7 +36,7 @@ router = APIRouter(
 )
 async def get_all_schedule_instances_for_current_user_for_today(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     return paginate(
         schedule_instances.get_today_schedule_instances_by_user_id(
@@ -47,7 +47,7 @@ async def get_all_schedule_instances_for_current_user_for_today(
 
 # @router.get("/{schedule_instance_id}", response_model=ScheduleInstance)
 # async def get_schedule_instance_for_current_user_by_id(
-#     schedule_instance_id: int, db: Session = Depends(get_db)
+#     schedule_instance_id: int, db: Session = Depends(get_db_session)
 # ):
 #     db_schedule_instance = schedule_instances.get_schedule_instance_by_id(
 #         schedule_instance_id=schedule_instance_id, db=db

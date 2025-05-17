@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from typing import Annotated
@@ -19,7 +19,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Session = Depends(get_db_session),
 ):
     """Get current user, based on the access token that they provided"""
     credentials_exception = HTTPException(

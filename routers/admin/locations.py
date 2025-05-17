@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from sqlite.crud import locations
@@ -30,12 +30,14 @@ router = APIRouter(
 
 
 @router.get("", response_model=Page[Location])
-async def get_all_locations(db: Session = Depends(get_db)):
+async def get_all_locations(db: Session = Depends(get_db_session)):
     return paginate(locations.get_all_locations(db=db))
 
 
 @router.get("/{location_id}", response_model=Location)
-async def get_location_by_id(location_id: int, db: Session = Depends(get_db)):
+async def get_location_by_id(
+    location_id: int, db: Session = Depends(get_db_session)
+):
     db_location = locations.get_location_by_id(location_id=location_id, db=db)
     if db_location is None:
         raise HTTPException(status_code=404, detail="Location not found")
@@ -47,7 +49,7 @@ async def get_location_by_id(location_id: int, db: Session = Depends(get_db)):
     response_model=Location,
 )
 async def create_location(
-    location: LocationCreateOrUpdateClass, db: Session = Depends(get_db)
+    location: LocationCreateOrUpdateClass, db: Session = Depends(get_db_session)
 ):
     if locations.get_location(
         bluetooth_address=location.bluetooth_address,
@@ -68,7 +70,7 @@ async def create_location(
 async def update_location(
     location_id: int,
     location: LocationCreateOrUpdateClass,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     db_location = locations.get_location_by_id(
         location_id=location_id,
@@ -85,7 +87,9 @@ async def update_location(
     "/{location_id}",
     response_model=CommonResponseClass,
 )
-async def delete_location(location_id: int, db: Session = Depends(get_db)):
+async def delete_location(
+    location_id: int, db: Session = Depends(get_db_session)
+):
     db_location = locations.get_location_by_id(location_id=location_id, db=db)
     if db_location is None:
         raise HTTPException(status_code=404, detail="Location not found")
@@ -94,9 +98,10 @@ async def delete_location(location_id: int, db: Session = Depends(get_db)):
     except IntegrityError:
         raise HTTPException(
             status_code=403,
-            detail="Can not delete a location which has schedules or classes attached to its",
+            detail="Can not delete a location which has schedules or "
+            + "classes attached to its",
         )
-    except:
+    except Exception:
         raise HTTPException(
             status_code=500, detail="Unable to delete exception"
         )

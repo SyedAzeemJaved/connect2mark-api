@@ -1,6 +1,6 @@
 from fastapi import Depends, APIRouter
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 import sqlite.crud.stats as crud
@@ -26,5 +26,5 @@ router = APIRouter(
     summary="Get a stats for the dashboard",
     response_model=StatsBaseClass,
 )
-async def get_all_stats(db: Session = Depends(get_db)):
+async def get_all_stats(db: Session = Depends(get_db_session)):
     return crud.get_all_stats(db=db)

@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi_pagination import add_pagination
 
+from contextlib import asynccontextmanager
+from sqlite.database import sessionmanager
+
 from routers import jwt_tokens
 from routers.admin import (
     users as admin_users,
@@ -83,7 +86,17 @@ origins = [
     "*",
 ]
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+
+    if sessionmanager._engine is not None:
+        await sessionmanager.close()
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="Safe Check: Multi Layer Classroom Presence System",
     description="Python based API to act as a backend for both "
     + "SafeCheck FE clients. Note that all date(s) and time(s) "

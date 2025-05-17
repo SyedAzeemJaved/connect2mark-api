@@ -3,8 +3,7 @@ from celery import schedules
 
 from datetime import datetime, timezone
 
-from sqlite.database import get_db
-
+from sqlite.dependency import get_db_session
 from sqlite.models import ScheduleInstanceModel
 
 from sqlite.crud import schedules
@@ -22,7 +21,8 @@ celery = Celery(
 
 @celery.task
 def create_schedule_instances_or_classes() -> None:
-    db_generator = get_db()
+    # TODO: Check iterator logic
+    db_generator = get_db_session()
     db = next(db_generator)
     try:
         today_schedules = schedules.get_today_schedules(db=db)

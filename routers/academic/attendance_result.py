@@ -3,7 +3,7 @@ from fastapi import Depends, APIRouter
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from sqlite.crud import attendance
@@ -33,7 +33,7 @@ router = APIRouter(
 async def get_attendance_for_duration(
     data: AttendanceSearchClass,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     schedule_instances = get_all_schedule_instance_by_date_range_and_user_id(
         start_date=data.start_date,

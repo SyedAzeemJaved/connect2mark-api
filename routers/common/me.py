@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, APIRouter, UploadFile
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 import sqlite.crud.users as users
@@ -37,7 +37,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
 async def update_user(
     user: UserUpdateClass,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     other_object = users.get_user_by_email(user_email=user.email, db=db)
     if other_object:
@@ -83,7 +83,7 @@ async def update_user(
 async def update_user_password(
     new_password: UserPasswordUpdateClass,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     return users.update_user_password(
         new_password=new_password, db_user=current_user, db=db

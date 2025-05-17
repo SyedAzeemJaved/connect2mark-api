@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from datetime import timedelta
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from secret import secret
@@ -23,7 +23,7 @@ router = APIRouter(
 @router.post("", summary="Generate a new access token", response_model=Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     user = authenticate_user(
         email=form_data.username, password=form_data.password, db=db

@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from sqlite.crud import attendance
@@ -34,7 +34,7 @@ router = APIRouter(
 async def get_attendance_for_duration(
     academic_user_id: int,
     data: AttendanceSearchClass,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     db_user = get_user_by_id(user_id=academic_user_id, db=db)
     if not db_user:

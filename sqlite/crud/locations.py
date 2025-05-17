@@ -38,7 +38,10 @@ def get_location_by_coordinates(coordinates: str, db: Session):
 
 
 def get_location(bluetooth_address: str, coordinates: str, db: Session):
-    """Get a single location by both bluetooth address and coordinates from the database"""
+    (
+        """Get a single location by both bluetooth address and coordinates"""
+        + """ from the database"""
+    )
     return (
         db.query(models.LocationModel)
         .filter(

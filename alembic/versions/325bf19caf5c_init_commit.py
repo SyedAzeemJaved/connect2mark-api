@@ -1,8 +1,8 @@
-"""Initial commit
+"""Init commit
 
-Revision ID: 24e7f6cfd4bc
+Revision ID: 325bf19caf5c
 Revises: 
-Create Date: 2025-05-01 21:35:51.232901
+Create Date: 2025-05-17 10:15:12.202184
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '24e7f6cfd4bc'
+revision: str = '325bf19caf5c'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -52,7 +52,7 @@ def upgrade() -> None:
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('is_reoccurring', sa.Boolean(), nullable=False),
     sa.Column('date', sa.Date(), nullable=True),
-    sa.Column('day', sa.Enum(name='day', create_constraint=True), nullable=False),
+    sa.Column('day', sa.Enum(name='day'), nullable=False),
     sa.Column('start_time_in_utc', sa.Time(), nullable=False),
     sa.Column('end_time_in_utc', sa.Time(), nullable=False),
     sa.Column('updated_at_in_utc', sa.DateTime(), nullable=True),
@@ -65,8 +65,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('phone', sa.String(), nullable=True),
-    sa.Column('department', sa.Enum(name='department', create_constraint=True), nullable=False),
-    sa.Column('designation', sa.Enum(name='designation', create_constraint=True), nullable=False),
+    sa.Column('department', sa.Enum(name='department'), nullable=False),
+    sa.Column('designation', sa.Enum(name='designation'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('phone'),
@@ -98,7 +98,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('schedule_instance_id', sa.Integer(), nullable=False),
-    sa.Column('attendance_status', sa.Enum(name='attendance_status', create_constraint=True), nullable=False),
+    sa.Column('attendance_status', sa.Enum(name='attendance_status'), nullable=False),
     sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['schedule_instance_id'], ['schedule_instances.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),

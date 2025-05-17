@@ -2,8 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, APIRouter
 
-
-from sqlite.database import get_db
+from sqlite.dependency import get_db_session
 from sqlalchemy.orm import Session
 
 from sqlite.crud import attendance
@@ -34,7 +33,7 @@ router = APIRouter(
 async def mark_attendance(
     schedule_instance_id: int,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_session),
 ):
     db_schedule_instance = get_schedule_instance_by_id(
         schedule_instance_id=schedule_instance_id, db=db
