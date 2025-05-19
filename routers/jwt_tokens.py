@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 
 from sqlite.dependency import get_db_session
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from secret import secret
 
@@ -23,9 +23,9 @@ router = APIRouter(
 @router.post("", summary="Generate a new access token", response_model=Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),
 ):
-    user = authenticate_user(
+    user = await authenticate_user(
         email=form_data.username, password=form_data.password, db=db
     )
     if not user:
@@ -34,6 +34,7 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     access_token_expires = timedelta(minutes=secret.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email},

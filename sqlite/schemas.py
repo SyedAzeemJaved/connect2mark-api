@@ -44,8 +44,8 @@ class CommonResponseClass(BaseModel):
 # UserAdditionalDetail
 class UserAdditionalDetailBaseClass(BaseModel):
     phone: str | None = None
-    department: DepartmentsEnum = DepartmentsEnum.NOT_SPECIFIED
-    designation: DesignationsEnum = DesignationsEnum.NOT_SPECIFIED
+    department: DepartmentsEnum | None = None
+    designation: DesignationsEnum | None = None
 
     @field_validator("*", mode="after")
     @classmethod
@@ -149,6 +149,7 @@ class Location(LocationBaseClass):
     )
 
     id: int
+    secret_key: str | None  # TODO: URGENT
     created_at_in_utc: datetime = (
         get_current_datetime_in_str_iso_8601_with_z_suffix()
     )
@@ -165,7 +166,7 @@ class ScheduleBaseClass(BaseModel):
 
 
 class ScheduleCreateBaseClass(ScheduleBaseClass):
-    academic_user_id: int
+    teacher_id: int
     location_id: int
 
 
@@ -199,6 +200,7 @@ class Schedule(ScheduleBaseClass):
     is_reoccurring: bool
 
     location: Location
+    teacher: User
 
     date: date | None
     day: DaysEnum
@@ -212,7 +214,7 @@ class Schedule(ScheduleBaseClass):
 
 # Schedule Search
 class ScheduleSearchBaseClass(BaseModel):
-    academic_user_id: int
+    teacher_id: int
     location_id: int
     start_time_in_utc: time = get_current_time_in_str_iso_8601()
     end_time_in_utc: time = get_current_time_in_str_iso_8601(is_end_time=True)
@@ -232,7 +234,7 @@ class ScheduleInstanceBaseClass(BaseModel):
 
 
 class ScheduleInstanceUpdateClass(ScheduleInstanceBaseClass):
-    academic_user_id: int
+    teacher_id: int
     location_id: int
 
 
@@ -300,18 +302,10 @@ class AttendanceResult(AttendanceBaseClass):
     )
 
 
-# Attendance Search
-class AttendanceSearchClass(AttendanceBaseClass):
-    start_date: date = datetime.strftime(
-        datetime.now(tz=timezone.utc) - timedelta(days=15),
-        time_constants.DATE_TIME_FORMAT,
-    )
-    end_date: date = datetime.now(tz=timezone.utc).date()
-
-
 # Stats
 class StatsBaseClass(BaseModel):
-    academic_user_count: int
+    teachers_count: int
+    students_count: int
     locations_count: int
     schedules_count: int
     schedule_instances_count: int

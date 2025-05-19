@@ -1,7 +1,7 @@
 from datetime import datetime, date, timezone
 
-from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_
+from sqlalchemy import select, or_, and_
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlite import models
 from sqlite.schemas import (
@@ -18,33 +18,22 @@ from sqlite.enums import DaysEnum
 from utils.date_utils import return_day_of_week_name
 
 
-def get_all_schedules(db: Session):
-    """Get all schedules (reoccurring and non-reoccurring) from the database"""
-    return db.query(models.ScheduleModel)
+def get_all_schedules_query():
+    return select(models.ScheduleModel)
 
 
-def get_all_schedules_by_date(date: date, db: Session):
-    """Get all schedules (reoccurring and non-reoccurring) by date from
-    the database"""
-    return db.query(models.ScheduleModel).filter(
-        models.ScheduleModel.date == date
-    )
+def get_all_schedules_by_date_query(date: date):
+    return select(models.ScheduleModel).where(models.ScheduleModel.date == date)
 
 
-def get_all_schedules_by_day(day: DaysEnum, db: Session):
-    """Get all schedules (reoccurring and non-reoccurring) by day from
-    the database"""
-    return db.query(models.ScheduleModel).filter(
-        models.ScheduleModel.day == day
-    )
+def get_all_schedules_by_day_query(day: DaysEnum):
+    return select(models.ScheduleModel).where(models.ScheduleModel.day == day)
 
 
-def get_today_schedules(db: Session):
-    """Get all schedules (reoccurring and non-reoccurring) for the current
-    day or date (today) from the database"""
+def get_today_schedules_query():
     now = datetime.now(tz=timezone.utc)
 
-    return db.query(models.ScheduleModel).filter(
+    return select(models.ScheduleModel).where(
         or_(
             and_(
                 models.ScheduleModel.is_reoccurring.is_(True),
@@ -60,80 +49,75 @@ def get_today_schedules(db: Session):
     )
 
 
-def get_all_schedules_by_user_id(user_id: int, db: Session):
-    """ "Get all schedules (reoccurring) and non-reoccurring for a
-    particular user"""
+def get_all_schedules_by_user_id_query(user_id: int):
+    # TODO: IMPORTANT
     return (
-        db.query(models.ScheduleModel)
+        select(models.ScheduleModel)
         .join(models.ScheduleModel.academic_users)
-        .filter(models.UserModel.id == user_id)
+        .where(models.ScheduleModel.academic_users == user_id)
     )
 
 
-def get_reoccurring_schedule(
-    schedule: ScheduleReoccurringSearchClass, db: Session
+async def get_reoccurring_schedule(
+    schedule: ScheduleReoccurringSearchClass, db: AsyncSession
 ):
-    """Get a single reoccurring schedule from the database"""
-    return (
-        db.query(models.ScheduleModel)
-        .join(models.ScheduleModel.academic_users)
-        .filter(
+    return await db.scalar(
+        select(models.ScheduleModel)
+        .join(
+            models.UserModel,
+            onclause=models.UserModel.id == models.ScheduleModel.teacher_id,
+        )
+        .where(
             and_(
                 models.ScheduleModel.start_time_in_utc
                 == schedule.start_time_in_utc,
                 models.ScheduleModel.end_time_in_utc
                 == schedule.end_time_in_utc,
-                models.UserModel.id == schedule.academic_user_id,
+                models.UserModel.id == schedule.teacher_id,
                 models.ScheduleModel.location_id == schedule.location_id,
                 models.ScheduleModel.day == schedule.day,
             )
         )
-        .first()
     )
 
 
-def get_non_reoccurring_schedule(
-    schedule: ScheduleNonReoccurringSearchClass, db: Session
+async def get_non_reoccurring_schedule(
+    schedule: ScheduleNonReoccurringSearchClass, db: AsyncSession
 ):
-    """Get a single non-reoccurring schedule from the database"""
-    return (
-        db.query(models.ScheduleModel)
-        .join(models.ScheduleModel.academic_users)
-        .filter(
+    return await db.scalar(
+        select(models.ScheduleModel)
+        .join(
+            models.UserModel,
+            onclause=models.UserModel.id == models.ScheduleModel.teacher_id,
+        )
+        .where(
             and_(
                 models.ScheduleModel.start_time_in_utc
                 == schedule.start_time_in_utc,
                 models.ScheduleModel.end_time_in_utc
                 == schedule.end_time_in_utc,
-                models.UserModel.id == schedule.academic_user_id,
+                models.UserModel.id == schedule.teacher_id,
                 models.ScheduleModel.location_id == schedule.location_id,
                 models.ScheduleModel.date == schedule.date,
             )
         )
-        .first()
     )
 
 
-def get_schedule_by_id(schedule_id: int, db: Session):
-    """Get a single schedule (reoccurring or non-reoccurring) by id
-    from the database"""
-    return (
-        db.query(models.ScheduleModel)
-        .filter(models.ScheduleModel.id == schedule_id)
-        .first()
+async def get_schedule_by_id(schedule_id: int, db: AsyncSession):
+    return await db.scalar(
+        select(models.ScheduleModel).where(
+            models.ScheduleModel.id == schedule_id
+        )
     )
 
 
-def create_schedule(
+async def create_schedule(
     schedule: (
         ScheduleReoccurringCreateClass | ScheduleNonReoccurringCreateClass
     ),
-    db_academic_user: models.UserModel,
-    db: Session,
+    db: AsyncSession,
 ):
-    """Create a new schedule (reoccurring or non-reoccurring) in the database"""
-    del schedule.academic_user_id
-
     if isinstance(schedule, ScheduleReoccurringCreateClass):
         db_schedule = models.ScheduleModel(
             **schedule.__dict__, is_reoccurring=True, date=None
@@ -145,35 +129,39 @@ def create_schedule(
             day=return_day_of_week_name(date=schedule.date),
         )
 
-    db_schedule.academic_users.append(db_academic_user)
     db.add(db_schedule)
-    db.commit()
+
+    # db_schedule.academic_users.append(db_academic_user)
+
+    await db.commit()
+
+    await db.refresh(db_schedule)
 
     return db_schedule
 
 
-def update_schedule(
+async def update_schedule(
     schedule: (
         ScheduleReoccurringUpdateClass | ScheduleNonReoccurringUpdateClass
     ),
     db_schedule: models.ScheduleModel,
-    db: Session,
+    db: AsyncSession,
 ):
-    """Update a schedule (reoccurring or non-reoccurring) in the database"""
     if isinstance(schedule, ScheduleReoccurringUpdateClass):
         db_schedule.update_reoccurring(schedule=schedule)
     else:
         db_schedule.update_non_reoccurring(
             schedule=schedule, day=return_day_of_week_name(date=schedule.date)
         )
-    db.commit()
+
+    await db.commit()
 
     return db_schedule
 
 
-def delete_schedule(db_schedule: models.ScheduleModel, db: Session):
-    """Delete a schedule (reoccurring or non-reoccurring) from the database"""
-    db.delete(db_schedule)
-    db.commit()
+async def delete_schedule(db_schedule: models.ScheduleModel, db: AsyncSession):
+    await db.delete(db_schedule)
+
+    await db.commit()
 
     return {"detail": "Deleted successfully"}

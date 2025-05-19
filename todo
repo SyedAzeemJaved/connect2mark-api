@@ -1,8 +1,5 @@
 Revisit check schedule exists - Check if schedule exists before creating it or if no rooms have conflicts and so on
 
-Validation for attendance, and other validations - DONE
-Check if attendance can be late or not - DONE
-
 Should timezone for start_time_in_utc and end_time_in_utc be in UTC?
 make title unique - NOT TO BE DONE, EXPLAIN WHY
 
@@ -11,8 +8,6 @@ db.query(models.UserModel)
 
 cascade relationships, when scheduleinstance and attendance
 
-replace all occurances of 'staff_member' to 'academic_user'
-intall stubs - https://stackoverflow.com/questions/66134021/how-to-resolve-mypy-error-with-sqlalchemy-enum
+db.refresh() - why do you need to constantly fetch from the database before sending response again? see router/admin/users:89, and this will be the same at other places as well.
 
-
-use aiosqlite
+serach all TODO

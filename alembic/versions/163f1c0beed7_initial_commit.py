@@ -1,8 +1,8 @@
-"""Init commit
+"""Initial commit
 
-Revision ID: 325bf19caf5c
+Revision ID: 163f1c0beed7
 Revises: 
-Create Date: 2025-05-17 10:15:12.202184
+Create Date: 2025-05-18 20:19:13.479512
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '325bf19caf5c'
+revision: str = '163f1c0beed7'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,12 +24,14 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('bluetooth_address', sa.String(), nullable=False),
+    sa.Column('secret_key', sa.String(), nullable=True),
     sa.Column('coordinates', sa.String(), nullable=False),
-    sa.Column('updated_at_in_utc', sa.DateTime(), nullable=True),
-    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
+    sa.Column('updated_at_in_utc', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('created_at_in_utc', sa.DateTime(timezone=True), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('bluetooth_address'),
     sa.UniqueConstraint('coordinates'),
+    sa.UniqueConstraint('secret_key'),
     sa.UniqueConstraint('title')
     )
     op.create_index(op.f('ix_locations_id'), 'locations', ['id'], unique=False)
@@ -40,24 +42,26 @@ def upgrade() -> None:
     sa.Column('password', sa.String(), nullable=False),
     sa.Column('is_admin', sa.Boolean(), nullable=False),
     sa.Column('is_student', sa.Boolean(), nullable=False),
-    sa.Column('updated_at_in_utc', sa.DateTime(), nullable=True),
-    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
+    sa.Column('updated_at_in_utc', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('created_at_in_utc', sa.DateTime(timezone=True), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     op.create_table('schedules',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('teacher_id', sa.Integer(), nullable=False),
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('is_reoccurring', sa.Boolean(), nullable=False),
     sa.Column('date', sa.Date(), nullable=True),
-    sa.Column('day', sa.Enum(name='day'), nullable=False),
+    sa.Column('day', sa.Enum('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY', name='day'), nullable=False),
     sa.Column('start_time_in_utc', sa.Time(), nullable=False),
     sa.Column('end_time_in_utc', sa.Time(), nullable=False),
-    sa.Column('updated_at_in_utc', sa.DateTime(), nullable=True),
-    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
+    sa.Column('updated_at_in_utc', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('created_at_in_utc', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['locations.id'], ),
+    sa.ForeignKeyConstraint(['teacher_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_schedules_id'), 'schedules', ['id'], unique=False)
@@ -65,8 +69,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('phone', sa.String(), nullable=True),
-    sa.Column('department', sa.Enum(name='department'), nullable=False),
-    sa.Column('designation', sa.Enum(name='designation'), nullable=False),
+    sa.Column('department', sa.Enum('BIOMEDICAL', 'COMPUTER_SCIENCE', 'COMPUTER_ENGINEERING', 'ELECTRONICS', 'SOFTWATE', 'TELECOM', name='department'), nullable=True),
+    sa.Column('designation', sa.Enum('CHAIRMAN', 'PROFESSOR', 'ASSOCIATE_PROFESSOR', 'ASSISTANT_PROFESSOR', 'LECTURER', 'JUNIOR_LECTURER', 'VISITING', name='designation'), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('phone'),
@@ -75,15 +79,17 @@ def upgrade() -> None:
     op.create_index(op.f('ix_user_additional_details_id'), 'user_additional_details', ['id'], unique=False)
     op.create_table('schedule_instances',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('teacher_id', sa.Integer(), nullable=False),
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('schedule_id', sa.Integer(), nullable=False),
     sa.Column('date', sa.Date(), nullable=False),
     sa.Column('start_time_in_utc', sa.Time(), nullable=False),
     sa.Column('end_time_in_utc', sa.Time(), nullable=False),
-    sa.Column('updated_at_in_utc', sa.DateTime(), nullable=True),
-    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
+    sa.Column('updated_at_in_utc', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('created_at_in_utc', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['locations.id'], ),
     sa.ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['teacher_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_schedule_instances_id'), 'schedule_instances', ['id'], unique=False)
@@ -98,8 +104,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('schedule_instance_id', sa.Integer(), nullable=False),
-    sa.Column('attendance_status', sa.Enum(name='attendance_status'), nullable=False),
-    sa.Column('created_at_in_utc', sa.DateTime(), nullable=True),
+    sa.Column('attendance_status', sa.Enum('PRESENT', 'LATE', name='attendance_status'), nullable=False),
+    sa.Column('created_at_in_utc', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['schedule_instance_id'], ['schedule_instances.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),

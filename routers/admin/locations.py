@@ -1,10 +1,10 @@
-from fastapi import Depends, HTTPException, APIRouter
+from fastapi import Depends, status, HTTPException, APIRouter
 
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
 from sqlite.dependency import get_db_session
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlite.crud import locations
 
@@ -20,7 +20,7 @@ from utils.responses import common_responses
 from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(
-    prefix="/locations",
+    prefix="/admin/locations",
     tags=["admin - locations"],
     dependencies=[
         Depends(should_be_admin_user),
@@ -30,37 +30,58 @@ router = APIRouter(
 
 
 @router.get("", response_model=Page[Location])
-async def get_all_locations(db: Session = Depends(get_db_session)):
-    return paginate(locations.get_all_locations(db=db))
+async def get_all_locations(db: AsyncSession = Depends(get_db_session)):
+    return await paginate(db, locations.get_all_locations_query())
 
 
 @router.get("/{location_id}", response_model=Location)
 async def get_location_by_id(
-    location_id: int, db: Session = Depends(get_db_session)
+    location_id: int, db: AsyncSession = Depends(get_db_session)
 ):
-    db_location = locations.get_location_by_id(location_id=location_id, db=db)
+    db_location = await locations.get_location_by_id(
+        location_id=location_id, db=db
+    )
+
     if db_location is None:
-        raise HTTPException(status_code=404, detail="Location not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Location not found"
+        )
+
     return db_location
 
 
 @router.post(
     "",
     response_model=Location,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_location(
-    location: LocationCreateOrUpdateClass, db: Session = Depends(get_db_session)
+    location: LocationCreateOrUpdateClass,
+    db: AsyncSession = Depends(get_db_session),
 ):
-    if locations.get_location(
+    if await locations.get_location_by_title(
+        location_title=location.title, db=db
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Location with this title already exists",
+        )
+
+    if await locations.get_location(
         bluetooth_address=location.bluetooth_address,
         coordinates=location.coordinates,
         db=db,
     ):
         raise HTTPException(
-            status_code=403,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Bluetooth address or coordinates already in use",
         )
-    return locations.create_location(location=location, db=db)
+
+    await locations.create_location(location=location, db=db)
+
+    return await locations.get_location_by_bluetooth_address(
+        bluetooth_address=location.bluetooth_address, db=db
+    )
 
 
 @router.put(
@@ -70,34 +91,43 @@ async def create_location(
 async def update_location(
     location_id: int,
     location: LocationCreateOrUpdateClass,
-    db: Session = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),
 ):
-    db_location = locations.get_location_by_id(
+    db_location = await locations.get_location_by_id(
         location_id=location_id,
         db=db,
     )
+
     if db_location is None:
-        raise HTTPException(status_code=404, detail="Location not found")
-    return locations.update_location(
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Location not found"
+        )
+
+    return await locations.update_location(
         location=location, db_location=db_location, db=db
     )
 
 
-@router.delete(
-    "/{location_id}",
-    response_model=CommonResponseClass,
-)
+@router.delete("/{location_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_location(
-    location_id: int, db: Session = Depends(get_db_session)
+    location_id: int, db: AsyncSession = Depends(get_db_session)
 ):
-    db_location = locations.get_location_by_id(location_id=location_id, db=db)
+    db_location = await locations.get_location_by_id(
+        location_id=location_id, db=db
+    )
     if db_location is None:
-        raise HTTPException(status_code=404, detail="Location not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Location not found"
+        )
+
     try:
-        return locations.delete_location(db_location=db_location, db=db)
+        await locations.delete_location(db_location=db_location, db=db)
+
+        return {"detail": "Deleted successfully"}
+
     except IntegrityError:
         raise HTTPException(
-            status_code=403,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Can not delete a location which has schedules or "
             + "classes attached to its",
         )

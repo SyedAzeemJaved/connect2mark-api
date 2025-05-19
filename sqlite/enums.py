@@ -2,16 +2,15 @@ import enum
 
 
 class DepartmentsEnum(str, enum.Enum):
-    NOT_SPECIFIED = "not_specified"
     BIOMEDICAL = "biomedical"
     COMPUTER_SCIENCE = "computer_science"
+    COMPUTER_ENGINEERING = "computer_engineering"
     ELECTRONICS = "electronics"
     SOFTWATE = "software"
     TELECOM = "telecom"
 
 
 class DesignationsEnum(str, enum.Enum):
-    NOT_SPECIFIED = "not_specified"
     CHAIRMAN = "chairman"
     PROFESSOR = "professor"
     ASSOCIATE_PROFESSOR = "associate_professor"

@@ -1,13 +1,13 @@
-from typing import Optional, get_args
+from typing import Optional
 
 from datetime import datetime, time, timezone
 from datetime import date as dtdate
 
-from sqlalchemy import ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import DateTime, Enum, ForeignKey, UniqueConstraint
 
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
-from sqlite.database import Base, engine
+from sqlite.database import Base
 
 from sqlite.schemas import (
     UserUpdateClass,
@@ -23,14 +23,12 @@ from sqlite.enums import (
     AttendanceEnum,
 )
 
-Base.metadata.create_all(bind=engine)
-
 
 class TimestampCreateOnlyBaseModel(Base):
     __abstract__ = True
 
-    created_at_in_utc: Mapped[Optional[datetime]] = mapped_column(
-        default=datetime.now(tz=timezone.utc)
+    created_at_in_utc: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.now(tz=timezone.utc)
     )
 
 
@@ -38,6 +36,7 @@ class TimestampBaseModel(TimestampCreateOnlyBaseModel):
     __abstract__ = True
 
     updated_at_in_utc: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
         onupdate=datetime.now(tz=timezone.utc),
     )
 
@@ -84,23 +83,21 @@ class UserAdditionalDetailModel(Base):
 
     phone: Mapped[Optional[str]] = mapped_column(unique=True, default=None)
 
-    department: Mapped[DepartmentsEnum] = mapped_column(
+    department: Mapped[Optional[DepartmentsEnum]] = mapped_column(
         Enum(
-            *get_args(DepartmentsEnum),
+            DepartmentsEnum,
             name="department",
-            create_constraint=True,
             validate_strings=True,
         ),
-        default=DepartmentsEnum.NOT_SPECIFIED,
+        default=None,
     )
-    designation: Mapped[DesignationsEnum] = mapped_column(
+    designation: Mapped[Optional[DesignationsEnum]] = mapped_column(
         Enum(
-            *get_args(DesignationsEnum),
+            DesignationsEnum,
             name="designation",
-            create_constraint=True,
             validate_strings=True,
         ),
-        default=DesignationsEnum.NOT_SPECIFIED,
+        default=None,
     )
 
     def update(self, user: UserUpdateClass, **kwargs):
@@ -117,6 +114,7 @@ class LocationModel(TimestampBaseModel):
 
     title: Mapped[str] = mapped_column(unique=True)
     bluetooth_address: Mapped[str] = mapped_column(unique=True)
+    secret_key: Mapped[Optional[str]] = mapped_column(unique=True, default=None)
     coordinates: Mapped[str] = mapped_column(unique=True)
 
     def update(self, location: LocationCreateOrUpdateClass, **kwargs):
@@ -143,6 +141,17 @@ class ScheduleModel(TimestampBaseModel):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
+    teacher_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), unique=False
+    )
+    # Define the one-to-one relationship with UserModel
+    teacher = relationship(
+        "UserModel",
+        uselist=False,
+        primaryjoin="ScheduleModel.teacher_id == UserModel.id",
+        cascade="none",
+    )
+
     # Check back populates and cascade
     academic_users = relationship("UserModel", secondary="schedule_users")
 
@@ -162,12 +171,11 @@ class ScheduleModel(TimestampBaseModel):
     is_reoccurring: Mapped[bool] = mapped_column(default=True)
 
     # Date will be null for reoccurring classes
-    date: Mapped[Optional[dtdate]] = mapped_column(default=False)
+    date: Mapped[Optional[dtdate]] = mapped_column(default=None)
     day: Mapped[DaysEnum] = mapped_column(
         Enum(
-            *get_args(DaysEnum),
+            DaysEnum,
             name="day",
-            create_constraint=True,
             validate_strings=True,
         ),
     )
@@ -212,6 +220,17 @@ class ScheduleInstanceModel(TimestampBaseModel):
     __tablename__ = "schedule_instances"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    teacher_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), unique=False
+    )
+    # Define the one-to-one relationship with UserModel
+    teacher = relationship(
+        "UserModel",
+        uselist=False,
+        primaryjoin="ScheduleInstanceModel.teacher_id == UserModel.id",
+        cascade="none",
+    )
 
     # Check back populates and cascade
     academic_users = relationship(
@@ -288,9 +307,8 @@ class AttendanceModel(TimestampCreateOnlyBaseModel):
 
     attendance_status: Mapped[AttendanceEnum] = mapped_column(
         Enum(
-            *get_args(AttendanceEnum),
+            AttendanceEnum,
             name="attendance_status",
-            create_constraint=True,
             validate_strings=True,
         ),
     )
