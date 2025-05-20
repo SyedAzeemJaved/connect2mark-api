@@ -167,19 +167,19 @@ async def update_schedule_instance(
             detail="Schedule instance not found",
         )
 
-    new_academic_user = await get_user_by_id(
-        user_id=schedule_instance.academic_user_id, db=db
+    db_teacher = await get_user_by_id(
+        user_id=schedule_instance.teacher_id, db=db
     )
 
-    if not new_academic_user:
+    if not db_teacher:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    if new_academic_user.is_admin:
+    if db_teacher.is_admin or db_teacher.is_student:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="User should be an academic member",
+            detail="User should be a teacher",
         )
 
     if not await get_location_by_id(

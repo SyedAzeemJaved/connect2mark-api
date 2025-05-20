@@ -150,6 +150,7 @@ class ScheduleModel(TimestampBaseModel):
         uselist=False,
         primaryjoin="ScheduleModel.teacher_id == UserModel.id",
         cascade="none",
+        lazy="joined",
     )
 
     # Check back populates and cascade
@@ -164,6 +165,7 @@ class ScheduleModel(TimestampBaseModel):
         uselist=False,
         primaryjoin="ScheduleModel.location_id == LocationModel.id",
         cascade="none",
+        lazy="joined",
     )
 
     title: Mapped[str]
@@ -187,6 +189,8 @@ class ScheduleModel(TimestampBaseModel):
         self, schedule: ScheduleReoccurringUpdateClass, **kwargs
     ):
         self.title = schedule.title
+        self.location_id = schedule.location_id
+        self.teacher_id = schedule.teacher_id
         self.day = schedule.day
         self.start_time_in_utc = schedule.start_time_in_utc
         self.end_time_in_utc = schedule.end_time_in_utc
@@ -230,6 +234,7 @@ class ScheduleInstanceModel(TimestampBaseModel):
         uselist=False,
         primaryjoin="ScheduleInstanceModel.teacher_id == UserModel.id",
         cascade="none",
+        lazy="joined",
     )
 
     # Check back populates and cascade
@@ -246,6 +251,7 @@ class ScheduleInstanceModel(TimestampBaseModel):
         uselist=False,
         primaryjoin="ScheduleInstanceModel.location_id == LocationModel.id",
         cascade="none",
+        lazy="joined",
     )
 
     schedule_id: Mapped[int] = mapped_column(
@@ -258,6 +264,7 @@ class ScheduleInstanceModel(TimestampBaseModel):
         uselist=False,
         primaryjoin="ScheduleInstanceModel.schedule_id == ScheduleModel.id",
         cascade="none",
+        lazy="joined",
     )
 
     date: Mapped[dtdate]
@@ -266,8 +273,9 @@ class ScheduleInstanceModel(TimestampBaseModel):
     end_time_in_utc: Mapped[time]
 
     def update(self, schedule_instance: ScheduleInstanceUpdateClass, **kwargs):
-        self.academic_user_id = schedule_instance.academic_user_id
+        self.teacher_id = schedule_instance.teacher_id
         self.location_id = schedule_instance.location_id
+        self.schedule_id = schedule_instance.schedule_id
 
 
 class AttendanceModel(TimestampCreateOnlyBaseModel):

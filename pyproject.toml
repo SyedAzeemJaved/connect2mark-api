@@ -18,6 +18,8 @@ python-multipart = "^0.0.6"
 redis = "^5.0.2"
 passlib = {version = "^1.7.4", extras = ["bcrypt"]}
 asyncpg = "^0.30.0"
+celery = "^5.5.2"
+psycopg2-binary = "^2.9.10"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"

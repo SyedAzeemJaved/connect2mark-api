@@ -23,6 +23,7 @@ class Secret:
         self.ALGORITHM = algorithm
         self.ACCESS_TOKEN_EXPIRE_MINUTES = int(access_token_expire_minutes)
         self.DATABASE_URL = database_url
+        self.SYNC_DATABASE_URL = database_url.replace("+asyncpg", "")
 
 
 secret = Secret(

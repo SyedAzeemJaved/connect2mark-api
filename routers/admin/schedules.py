@@ -146,7 +146,7 @@ async def get_schedule_by_id(
 
 @router.post(
     "/reoccurring",
-    # response_model=Schedule,
+    response_model=Schedule,
     status_code=status.HTTP_201_CREATED,
 )
 # )
@@ -193,7 +193,7 @@ async def create_reoccuring_schedule(
 
 @router.post(
     "/non-reoccurring",
-    # response_model=Schedule,
+    response_model=Schedule,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_non_reoccuring_schedule(

@@ -168,6 +168,7 @@ class ScheduleBaseClass(BaseModel):
 class ScheduleCreateBaseClass(ScheduleBaseClass):
     teacher_id: int
     location_id: int
+    students: list[int]
 
 
 class ScheduleReoccurringCreateClass(ScheduleCreateBaseClass):
@@ -179,7 +180,9 @@ class ScheduleNonReoccurringCreateClass(ScheduleCreateBaseClass):
 
 
 class ScheduleUpdateBaseClass(ScheduleBaseClass):
-    pass
+    teacher_id: int
+    location_id: int
+    students: list[int]
 
 
 class ScheduleReoccurringUpdateClass(ScheduleUpdateBaseClass):
@@ -253,6 +256,7 @@ class ScheduleInstance(ScheduleInstanceBaseClass):
     schedule: Schedule
 
     location: Location
+    teacher: User
 
     created_at_in_utc: datetime = (
         get_current_datetime_in_str_iso_8601_with_z_suffix()
