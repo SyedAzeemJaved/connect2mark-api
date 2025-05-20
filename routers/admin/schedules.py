@@ -6,6 +6,7 @@ from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
 from sqlite.dependency import get_db_session
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlite.crud import schedules
@@ -316,3 +317,21 @@ async def delete_schedule(
         )
 
     return await schedules.delete_schedule(db_schedule=db_schedule, db=db)
+
+
+@router.get("/students/{schedule_id}")
+async def get_students_for_a_schedule(
+    schedule_id: int, db: AsyncSession = Depends(get_db_session)
+):
+    db_schedule = await schedules.get_schedule_by_id(
+        schedule_id=schedule_id, db=db
+    )
+
+    if db_schedule is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found"
+        )
+
+    return await schedules.get_all_students_for_a_schedule(
+        db_schedule=db_schedule, db=db
+    )

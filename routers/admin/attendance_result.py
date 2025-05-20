@@ -44,7 +44,7 @@ router = APIRouter(
 
 @router.get(
     "/{academic_user_id}",
-    response_model=Page[AttendanceResult],
+    # response_model=Page[AttendanceResult],
 )
 async def get_attendance_for_duration(
     academic_user_id: int,
@@ -73,12 +73,20 @@ async def get_attendance_for_duration(
         )
     )
 
-    attendance_list = (
+    attendance_list = await db.execute(
         attendance.get_all_attendance_by_schedule_instance_ids_query(
             schedule_ids=[x.id for x in schedule_instances]
         )
     )
+
+    result = attendance_list.fetchall()
+    print(result)
+
+    return {}
+
     attendance_dict = {obj.schedule_instance.id: obj for obj in attendance_list}
+
+    print(attendance_dict)
 
     return await paginate(
         db,

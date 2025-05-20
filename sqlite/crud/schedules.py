@@ -291,3 +291,28 @@ async def delete_schedule(db_schedule: models.ScheduleModel, db: AsyncSession):
     await db.commit()
 
     return {"detail": "Deleted successfully"}
+
+
+async def get_all_students_for_a_schedule(
+    db_schedule: models.ScheduleModel, db: AsyncSession
+):
+    result = await db.execute(
+        select(models.ScheduleUserModel.user_id).where(
+            models.ScheduleUserModel.schedule_id == db_schedule.id
+        )
+    )
+    user_ids = [row[0] for row in result.fetchall()]
+
+    if not user_ids:
+        return []
+
+    result = await db.execute(
+        select(models.UserModel.id, models.UserModel.full_name).where(
+            models.UserModel.id.in_(user_ids)
+        )
+    )
+    students = [
+        {"id": row[0], "full_name": row[1]} for row in result.fetchall()
+    ]
+
+    return students
