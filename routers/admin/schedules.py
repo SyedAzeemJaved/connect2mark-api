@@ -6,10 +6,9 @@ from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
 from sqlite.dependency import get_db_session
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlite.crud import schedules
+from sqlite.crud import schedules, schedule_instances
 from sqlite.crud.users import get_user_by_id
 from sqlite.crud.locations import get_location_by_id
 
@@ -314,6 +313,16 @@ async def delete_schedule(
     if db_schedule is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found"
+        )
+
+    db_schedule_instances_count = await schedule_instances.get_all_schedule_instances_count_by_schedule_id(
+        schedule_id=db_schedule.id, db=db
+    )
+
+    if db_schedule_instances_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Schedule you are trying to delete has schedule instances",
         )
 
     return await schedules.delete_schedule(db_schedule=db_schedule, db=db)

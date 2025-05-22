@@ -252,7 +252,7 @@ async def update_schedule(
     await db.refresh(db_schedule)
 
     # 1. Remove all existing students
-    await db.scalars(
+    await db.execute(
         delete(models.ScheduleUserModel).where(
             models.ScheduleUserModel.schedule_id == db_schedule.id
         )
@@ -318,7 +318,9 @@ async def get_all_students_for_a_schedule(
 
     result = await db.execute(
         select(models.UserModel.id, models.UserModel.full_name).where(
-            models.UserModel.id.in_(user_ids)
+            models.UserModel.id.in_(user_ids),
+            models.UserModel.is_admin.is_(False),
+            models.UserModel.is_student.is_(True),
         )
     )
     students = [

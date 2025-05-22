@@ -159,3 +159,15 @@ async def get_all_academic_user_ids_against_a_schedule_instance(
     user_ids = result.scalars().all()
 
     return user_ids
+
+
+async def get_all_schedule_instances_count_by_schedule_id(
+    schedule_id: int, db: AsyncSession
+):
+    result = await db.execute(
+        select(models.ScheduleInstanceModel.id).where(
+            models.ScheduleInstanceModel.schedule_id == schedule_id
+        )
+    )
+
+    return len(result.scalars().all())

@@ -126,7 +126,7 @@ async def delete_location(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Can not delete a location which has schedules or "
-            + "classes attached to its",
+            + "classes attached to it",
         )
     except Exception:
         raise HTTPException(
