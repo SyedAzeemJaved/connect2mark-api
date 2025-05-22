@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from sqlite import models
 from sqlite.enums import AttendanceEnum
@@ -35,15 +36,30 @@ def get_all_attendance_by_schedule_instance_ids_query(
 async def create_attendance(
     schedule_instance_id: int,
     attendance_status: AttendanceEnum,
+    user_id: int,
     db: AsyncSession,
 ):
     db_attendance = models.AttendanceModel(
         schedule_instance_id=schedule_instance_id,
         attendance_status=attendance_status,
+        user_id=user_id,
     )
 
     db.add(db_attendance)
 
     await db.commit()
+    await db.refresh(db_attendance)
+
+    # Eagerly load nested relationships
+    result = await db.execute(
+        select(models.AttendanceModel)
+        .options(
+            joinedload(models.AttendanceModel.user).joinedload(
+                models.AttendanceModel.schedule_instance
+            ),
+        )
+        .where(models.AttendanceModel.id == db_attendance.id)
+    )
+    db_attendance = result.scalar_one()
 
     return db_attendance

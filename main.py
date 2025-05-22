@@ -6,7 +6,7 @@ from fastapi_pagination import add_pagination
 from contextlib import asynccontextmanager
 from sqlite.database import sessionmanager
 
-from routers import jwt_tokens
+from routers import jwt_tokens, temporary
 from routers.admin import (
     users as admin_users,
     locations as admin_locations,
@@ -81,6 +81,11 @@ tags_metadata = [
         "name": "common - me",
         "description": "Manage current user.",
     },
+    # Temporary routes
+    {
+        "name": "temporary",
+        "description": "Temporary routes.",
+    },
 ]
 origins = [
     "*",
@@ -131,5 +136,7 @@ app.include_router(academic_attendance.router)
 app.include_router(academic_attendance_result.router)
 # Common user level routes
 app.include_router(common_me.router)
+# Temporary routes
+app.include_router(temporary.router)
 
 add_pagination(app)  # add pagination to your app

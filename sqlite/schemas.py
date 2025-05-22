@@ -1,6 +1,7 @@
 import re
 from datetime import datetime, date, time, timedelta, timezone
 
+from fastapi import Query
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 from sqlite.enums import (
@@ -306,6 +307,16 @@ class AttendanceResult(AttendanceBaseClass):
     )
 
 
+class AttendanceSearchClass(BaseModel):
+    start_date: date = Query(
+        datetime.strftime(
+            datetime.now(tz=timezone.utc) - timedelta(days=15),
+            time_constants.DATE_TIME_FORMAT,
+        )
+    )
+    end_date: date = Query(datetime.now(tz=timezone.utc).date())
+
+
 # Stats
 class StatsBaseClass(BaseModel):
     teachers_count: int
@@ -313,6 +324,14 @@ class StatsBaseClass(BaseModel):
     locations_count: int
     schedules_count: int
     schedule_instances_count: int
+
+
+class TemporaryBaseClass(BaseModel):
+    id: int
+
+
+class TemporaryClass(TemporaryBaseClass):
+    status: bool
 
 
 Token.model_rebuild()

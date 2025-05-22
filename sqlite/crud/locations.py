@@ -73,8 +73,10 @@ async def update_location(
     db_location: models.LocationModel,
     db: AsyncSession,
 ):
-    await db_location.update(location=location)
+    db_location.update(location=location)
+
     await db.commit()
+    await db.refresh(db_location)
 
     return db_location
 

@@ -275,7 +275,6 @@ class ScheduleInstanceModel(TimestampBaseModel):
     def update(self, schedule_instance: ScheduleInstanceUpdateClass, **kwargs):
         self.teacher_id = schedule_instance.teacher_id
         self.location_id = schedule_instance.location_id
-        self.schedule_id = schedule_instance.schedule_id
 
 
 class AttendanceModel(TimestampCreateOnlyBaseModel):
@@ -320,3 +319,13 @@ class AttendanceModel(TimestampCreateOnlyBaseModel):
             validate_strings=True,
         ),
     )
+
+
+class TemporaryModel(Base):
+    __tablename__ = "temporary"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    status: Mapped[bool] = mapped_column(default=False)
+
+    def flip_status(self):
+        self.status = False if self.status else True

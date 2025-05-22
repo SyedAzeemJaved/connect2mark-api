@@ -34,10 +34,10 @@ def get_all_schedule_instances_by_date_query(date: date):
     )
 
 
-async def get_all_schedule_instance_by_date_range_and_user_id(
+def get_all_schedule_instance_by_date_range_and_user_id_query(
     start_date: date, end_date: date, user_id: int, db: AsyncSession
 ):
-    return await db.scalars(
+    return (
         select(models.ScheduleInstanceModel)
         .options(
             joinedload(models.ScheduleInstanceModel.teacher).joinedload(

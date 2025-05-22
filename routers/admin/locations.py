@@ -11,7 +11,6 @@ from sqlite.crud import locations
 from sqlite.schemas import (
     LocationCreateOrUpdateClass,
     Location,
-    CommonResponseClass,
 )
 
 from utils.auth import should_be_admin_user
@@ -122,9 +121,7 @@ async def delete_location(
 
     try:
         await locations.delete_location(db_location=db_location, db=db)
-
         return {"detail": "Deleted successfully"}
-
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

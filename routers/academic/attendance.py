@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, APIRouter
 
 from sqlite.dependency import get_db_session
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlite.crud import attendance
 from sqlite.crud.schedule_instances import (
@@ -33,9 +33,9 @@ router = APIRouter(
 async def mark_attendance(
     schedule_instance_id: int,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),
 ):
-    db_schedule_instance = get_schedule_instance_by_id(
+    db_schedule_instance = await get_schedule_instance_by_id(
         schedule_instance_id=schedule_instance_id, db=db
     )
 
@@ -44,14 +44,14 @@ async def mark_attendance(
             status_code=403, detail="Schedule instance or class not found"
         )
 
-    if not db_schedule_instance.academic_user_id == current_user.id:
+    if not db_schedule_instance.teacher_id == current_user.id:
         raise HTTPException(
             status_code=403,
             detail="Can not mark attendance on a schedule instance or class "
             + "that you are not associated with",
         )
 
-    if attendance.get_attendance_by_schedule_instance_id(
+    if await attendance.get_attendance_by_schedule_instance_id(
         schedule_instance_id=db_schedule_instance.id, db=db
     ):
         raise HTTPException(
@@ -113,8 +113,9 @@ async def mark_attendance(
     if midpoint_time <= now:
         attendance_status = AttendanceEnum.LATE
 
-    return attendance.create_attendance(
+    return await attendance.create_attendance(
         schedule_instance_id=schedule_instance_id,
         attendance_status=attendance_status,
+        user_id=current_user.id,
         db=db,
     )
