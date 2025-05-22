@@ -1,8 +1,8 @@
-"""Initial commit
+"""Init commit
 
-Revision ID: a6e2ae3c4462
+Revision ID: 3f724d72d00b
 Revises: 
-Create Date: 2025-05-20 07:57:28.632278
+Create Date: 2025-05-22 09:02:22.498140
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'a6e2ae3c4462'
+revision: str = '3f724d72d00b'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -35,6 +35,12 @@ def upgrade() -> None:
     sa.UniqueConstraint('title')
     )
     op.create_index(op.f('ix_locations_id'), 'locations', ['id'], unique=False)
+    op.create_table('temporary',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('status', sa.Boolean(), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_temporary_id'), 'temporary', ['id'], unique=False)
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('full_name', sa.String(), nullable=False),
@@ -100,6 +106,16 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('user_id', 'schedule_id')
     )
+    op.create_table('attendance_tracking',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('schedule_instance_id', sa.Integer(), nullable=False),
+    sa.Column('created_at_in_utc', sa.DateTime(timezone=True), nullable=True),
+    sa.ForeignKeyConstraint(['schedule_instance_id'], ['schedule_instances.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_attendance_tracking_id'), 'attendance_tracking', ['id'], unique=False)
     op.create_table('attendances',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -108,9 +124,7 @@ def upgrade() -> None:
     sa.Column('created_at_in_utc', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['schedule_instance_id'], ['schedule_instances.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('schedule_instance_id'),
-    sa.UniqueConstraint('schedule_instance_id', 'user_id', name='uix_attendance_schedule_instance_user')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_attendances_id'), 'attendances', ['id'], unique=False)
     op.create_table('schedule_instance_users',
@@ -128,6 +142,8 @@ def downgrade() -> None:
     op.drop_table('schedule_instance_users')
     op.drop_index(op.f('ix_attendances_id'), table_name='attendances')
     op.drop_table('attendances')
+    op.drop_index(op.f('ix_attendance_tracking_id'), table_name='attendance_tracking')
+    op.drop_table('attendance_tracking')
     op.drop_table('schedule_users')
     op.drop_index(op.f('ix_schedule_instances_id'), table_name='schedule_instances')
     op.drop_table('schedule_instances')
@@ -137,6 +153,8 @@ def downgrade() -> None:
     op.drop_table('schedules')
     op.drop_index(op.f('ix_users_id'), table_name='users')
     op.drop_table('users')
+    op.drop_index(op.f('ix_temporary_id'), table_name='temporary')
+    op.drop_table('temporary')
     op.drop_index(op.f('ix_locations_id'), table_name='locations')
     op.drop_table('locations')
     # ### end Alembic commands ###

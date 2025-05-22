@@ -184,6 +184,16 @@ async def create_schedule(
     await db.commit()
     await db.refresh(db_schedule)
 
+    # Add teacher id as user_id in ScheduleUser Model
+    db.add(
+        models.ScheduleUserModel(
+            user_id=db_schedule.teacher_id,
+            schedule_id=db_schedule.id,
+        )
+    )
+    await db.commit()
+    await db.refresh(db_schedule)
+
     # Add all students to the bridge table
     if students:
         user_result = await db.execute(

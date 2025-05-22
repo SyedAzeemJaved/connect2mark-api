@@ -56,16 +56,6 @@ def should_schedule_instance_be_edited_or_deleted(
     # mark attendance after a class has started
     # One a class has started, we can not delete it regardless
 
-    # Check if no attendance has been marked
-    # if get_attendance_by_schedule_instance_id(
-    #     schedule_instance_id=schedule_instance.id, db=db
-    # ):
-    #     raise HTTPException(
-    #         status_code=status.HTTP_403_FORBIDDEN,
-    #         detail="You can not edit or delete a class whose attendance
-    #  has been marked",
-    #     )
-
 
 @router.get("", response_model=Page[ScheduleInstance])
 async def get_all_schedule_instancess(

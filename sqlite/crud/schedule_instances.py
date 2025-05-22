@@ -144,3 +144,18 @@ async def delete_schedule_instance(
     await db.commit()
 
     return {"detail": "Deleted successfully"}
+
+
+async def get_all_academic_user_ids_against_a_schedule_instance(
+    db_schedule_instance: models.ScheduleInstanceModel, db: AsyncSession
+):
+    result = await db.execute(
+        select(models.ScheduleInstanceUserModel.user_id).where(
+            models.ScheduleInstanceUserModel.schedule_instance_id
+            == db_schedule_instance.id
+        )
+    )
+
+    user_ids = result.scalars().all()
+
+    return user_ids

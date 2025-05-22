@@ -18,6 +18,7 @@ from routers.admin import (
 from routers.academic import (
     schedule_instances as academic_schedule_instances,
     attendance as academic_attendance,
+    attendance_tracking as academic_attendance_tracking,
     attendance_result as academic_attendance_result,
 )
 from routers.common import me as common_me
@@ -69,6 +70,11 @@ tags_metadata = [
     {
         "name": "academic - attendance",
         "description": "Mark attendance of a schedule instance or class for "
+        + "current user in the database.",
+    },
+    {
+        "name": "academic - attendance-tracking",
+        "description": "Track attendance of a schedule instance or class for "
         + "current user in the database.",
     },
     {
@@ -134,6 +140,7 @@ app.include_router(admin_stats.router)
 app.include_router(academic_schedule_instances.router)
 app.include_router(academic_attendance.router)
 app.include_router(academic_attendance_result.router)
+app.include_router(academic_attendance_tracking.router)
 # Common user level routes
 app.include_router(common_me.router)
 # Temporary routes

@@ -7,12 +7,13 @@ from sqlite import models
 from sqlite.enums import AttendanceEnum
 
 
-async def get_attendance_by_schedule_instance_id(
-    schedule_instance_id: int, db: AsyncSession
+async def get_attendance_by_schedule_instance_id_and_user_id(
+    schedule_instance_id: int, user_id: int, db: AsyncSession
 ):
     return await db.scalar(
         select(models.AttendanceModel).where(
-            models.AttendanceModel.schedule_instance_id == schedule_instance_id
+            models.AttendanceModel.schedule_instance_id == schedule_instance_id,
+            models.AttendanceModel.user_id == user_id,
         )
     )
 
@@ -54,9 +55,10 @@ async def create_attendance(
     result = await db.execute(
         select(models.AttendanceModel)
         .options(
-            joinedload(models.AttendanceModel.user).joinedload(
-                models.AttendanceModel.schedule_instance
-            ),
+            joinedload(models.AttendanceModel.user),
+            joinedload(models.AttendanceModel.schedule_instance)
+            .joinedload(models.ScheduleInstanceModel.teacher)
+            .joinedload(models.UserModel.additional_details),
         )
         .where(models.AttendanceModel.id == db_attendance.id)
     )
