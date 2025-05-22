@@ -12,6 +12,7 @@ from routers.admin import (
     locations as admin_locations,
     schedules as admin_schedules,
     schedule_instances as admin_schedule_instances,
+    attendance_tracking as admin_attendance_tracking,
     attendance_result as admin_attendance_result,
     stats as admin_stats,
 )
@@ -51,6 +52,10 @@ tags_metadata = [
         "name": "admin - schedule instances or classes",
         "description": "Update and view all schedule instances saved on the "
         + "database.",
+    },
+    {
+        "name": "admin - attendance-tracking",
+        "description": "Get attendance tracking results from the database.",
     },
     {
         "name": "admin - attendance-result",
@@ -134,6 +139,7 @@ app.include_router(admin_users.router)
 app.include_router(admin_locations.router)
 app.include_router(admin_schedules.router)
 app.include_router(admin_schedule_instances.router)
+app.include_router(admin_attendance_tracking.router)
 app.include_router(admin_attendance_result.router)
 app.include_router(admin_stats.router)
 # Academic user level routes

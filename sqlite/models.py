@@ -354,5 +354,4 @@ class AttendanceTrackingModel(Base):
 
     created_at_in_utc: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.now(tz=timezone.utc),
     )

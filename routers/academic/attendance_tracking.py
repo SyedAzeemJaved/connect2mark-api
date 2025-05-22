@@ -85,5 +85,6 @@ async def mark_attendance_tracking(
     return await attendance_tracking.create_attendance_tracking(
         schedule_instance_id=schedule_instance_id,
         user_id=current_user.id,
+        now=now,
         db=db,
     )
