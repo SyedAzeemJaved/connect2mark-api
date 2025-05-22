@@ -279,13 +279,6 @@ class ScheduleInstanceModel(TimestampBaseModel):
 
 class AttendanceModel(TimestampCreateOnlyBaseModel):
     __tablename__ = "attendances"
-    __table_args__ = (
-        UniqueConstraint(
-            "schedule_instance_id",
-            "user_id",
-            name="uix_attendance_schedule_instance_user",
-        ),
-    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
@@ -302,7 +295,7 @@ class AttendanceModel(TimestampCreateOnlyBaseModel):
 
     schedule_instance_id: Mapped[int] = mapped_column(
         ForeignKey("schedule_instances.id", ondelete="CASCADE"),
-        unique=True,
+        unique=False,
     )
     # Define the one-to-one relationship with ScheduleInstanceModel
     schedule_instance = relationship(
@@ -329,3 +322,37 @@ class TemporaryModel(Base):
 
     def flip_status(self):
         self.status = False if self.status else True
+
+
+class AttendanceTrackingModel(Base):
+    __tablename__ = "attendance_tracking"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        unique=False,
+    )
+    # Define the one-to-one relationship with UserModel
+    user = relationship(
+        "UserModel",
+        uselist=False,
+        primaryjoin="AttendanceTrackingModel.user_id == UserModel.id",
+    )
+
+    schedule_instance_id: Mapped[int] = mapped_column(
+        ForeignKey("schedule_instances.id", ondelete="CASCADE"),
+        unique=False,
+    )
+    # Define the one-to-one relationship with ScheduleInstanceModel
+    schedule_instance = relationship(
+        "ScheduleInstanceModel",
+        uselist=False,
+        primaryjoin="AttendanceTrackingModel.schedule_instance_id == ScheduleInstanceModel.id",  # noqa: E501
+        cascade="none",
+    )
+
+    created_at_in_utc: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now(tz=timezone.utc),
+    )

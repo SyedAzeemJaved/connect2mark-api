@@ -334,4 +334,27 @@ class TemporaryClass(TemporaryBaseClass):
     status: bool
 
 
+class AttendanceTrackingBaseClass(BaseModel):
+    pass
+
+
+class AttendanceTrackingCreateClass(AttendanceBaseClass):
+    schedule_instance_id: int
+
+
+class AttendanceTracking(AttendanceTrackingBaseClass):
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={datetime: convert_datetime_to_iso_8601_with_z_suffix},
+    )
+
+    id: int
+
+    schedule_instance: ScheduleInstance
+
+    created_at_in_utc: datetime = (
+        get_current_datetime_in_str_iso_8601_with_z_suffix()
+    )
+
+
 Token.model_rebuild()

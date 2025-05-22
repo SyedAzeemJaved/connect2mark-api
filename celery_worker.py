@@ -61,8 +61,6 @@ def create_schedule_instances_or_classes() -> None:
             result = db.execute(today_schedules_query)
             db_today_schedules = [row[0] for row in result.fetchall()]
 
-            print("all_db_schedules", db_today_schedules)
-
             now = datetime.now(tz=timezone.utc)
 
             for schedule in db_today_schedules:
@@ -71,9 +69,9 @@ def create_schedule_instances_or_classes() -> None:
                     .where(ScheduleUserModel.schedule_id == schedule.id)
                     .distinct()
                 )
-                student_ids = [row[0] for row in result.fetchall()]
+                both_student_teacher_ids = [row[0] for row in result.fetchall()]
 
-                schedule_instance = ScheduleInstanceModel(
+                db_schedule_instance = ScheduleInstanceModel(
                     schedule_id=schedule.id,
                     teacher_id=schedule.teacher_id,
                     location_id=schedule.location_id,
@@ -87,25 +85,25 @@ def create_schedule_instances_or_classes() -> None:
                 )
 
                 has_other = get_exact_schedule_instance(
-                    schedule_id=schedule_instance.schedule_id,
-                    teacher_id=schedule_instance.teacher_id,
-                    location_id=schedule_instance.location_id,
-                    date=schedule_instance.date,
-                    start_time_in_utc=schedule_instance.start_time_in_utc,
-                    end_time_in_utc=schedule_instance.end_time_in_utc,
+                    schedule_id=db_schedule_instance.schedule_id,
+                    teacher_id=db_schedule_instance.teacher_id,
+                    location_id=db_schedule_instance.location_id,
+                    date=db_schedule_instance.date,
+                    start_time_in_utc=db_schedule_instance.start_time_in_utc,
+                    end_time_in_utc=db_schedule_instance.end_time_in_utc,
                     db=db,
                 )
 
                 if not has_other:
-                    db.add(schedule_instance)
+                    db.add(db_schedule_instance)
                     db.commit()
 
-                    for student_id in student_ids:
-                        schedule_instance_user = ScheduleInstanceUserModel(
-                            user_id=student_id,
-                            schedule_instance_id=schedule_instance.id,
+                    for academic_user_id in both_student_teacher_ids:
+                        db_schedule_instance_user = ScheduleInstanceUserModel(
+                            user_id=academic_user_id,
+                            schedule_instance_id=db_schedule_instance.id,
                         )
-                        db.add(schedule_instance_user)
+                        db.add(db_schedule_instance_user)
                         db.commit()
         except Exception as e:
             print("There seems to be an error")
